@@ -5,9 +5,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 
 import java.time.LocalDate;
 import java.time.Period;
+
+import static ru.yandex.practicum.filmorate.storage.film.FilmValidator.*;
+import static ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage.DESCRIPTION_MAX_SIZE;
+import static ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage.FILM_BIRTHDAY;
 
 public class FilmControllerTests {
     private Film film;
@@ -20,7 +25,7 @@ public class FilmControllerTests {
     @Test
     public void nullNameValidationTest() {
         Assertions.assertThrows(ValidationException.class,
-                () -> FilmController.validateName(film),
+                () -> validateName(film),
                 "Null имя должно генерировать исключение ValidationException");
     }
 
@@ -29,7 +34,7 @@ public class FilmControllerTests {
         film.setName("");
 
         Assertions.assertThrows(ValidationException.class,
-                () -> FilmController.validateName(film),
+                () -> validateName(film),
                 "Пустое имя должно генерировать исключение ValidationException");
     }
 
@@ -37,13 +42,13 @@ public class FilmControllerTests {
     public void correctNameValidationTest() {
         film.setName("name");
 
-        Assertions.assertDoesNotThrow(() -> FilmController.validateName(film),
+        Assertions.assertDoesNotThrow(() -> validateName(film),
                 "Валидное имя не должно генерировать исключение");
     }
 
     @Test
     public void nullDescriptionValidationTest() {
-        Assertions.assertDoesNotThrow(() -> FilmController.validateDescription(film),
+        Assertions.assertDoesNotThrow(() -> validateDescription(film),
                 "Null описание не должно генерировать исключение");
     }
 
@@ -51,56 +56,56 @@ public class FilmControllerTests {
     public void emptyDescriptionValidationTest() {
         film.setDescription("");
 
-        Assertions.assertDoesNotThrow(() -> FilmController.validateDescription(film),
+        Assertions.assertDoesNotThrow(() -> validateDescription(film),
                 "Пустое описание не должно генерировать исключение");
     }
 
     @Test
     public void descriptionSizeMaxSizeValidationTest() {
-        film.setDescription(getString(FilmController.DESCRIPTION_MAX_SIZE));
+        film.setDescription(getString(DESCRIPTION_MAX_SIZE));
 
-        Assertions.assertDoesNotThrow(() -> FilmController.validateDescription(film),
+        Assertions.assertDoesNotThrow(() -> validateDescription(film),
                 "Описание длиной "
-                        + FilmController.DESCRIPTION_MAX_SIZE
+                        + DESCRIPTION_MAX_SIZE
                         + " символов не должно генерировать исключение");
     }
 
     @Test
     public void descriptionSizeMoreThanMaxSizeValidationTest() {
-        film.setDescription(getString(FilmController.DESCRIPTION_MAX_SIZE + 1));
+        film.setDescription(getString(DESCRIPTION_MAX_SIZE + 1));
 
         Assertions.assertThrows(ValidationException.class,
-                () -> FilmController.validateDescription(film),
+                () -> validateDescription(film),
                 "Описание длиной больше "
-                        + FilmController.DESCRIPTION_MAX_SIZE
+                        + DESCRIPTION_MAX_SIZE
                         + " символов должно генерировать исключение ValidationException");
     }
 
     @Test
     public void releaseDateIsBeforeTargetDateValidationTest() {
-        film.setReleaseDate(FilmController.FILM_BIRTHDAY.minus(Period.ofDays(1)));
+        film.setReleaseDate(FILM_BIRTHDAY.minus(Period.ofDays(1)));
         Assertions.assertThrows(ValidationException.class,
-                () -> FilmController.validateReleaseDate(film),
+                () -> validateReleaseDate(film),
                 "При дате релиза раньше "
-                        + FilmController.FILM_BIRTHDAY
+                        + FILM_BIRTHDAY
                         + " должно генерироваться исключение ValidationException");
     }
 
     @Test
     public void releaseDateEqualsTargetDateValidationException() {
-        film.setReleaseDate(FilmController.FILM_BIRTHDAY);
-        Assertions.assertDoesNotThrow(() -> FilmController.validateReleaseDate(film),
+        film.setReleaseDate(FILM_BIRTHDAY);
+        Assertions.assertDoesNotThrow(() -> validateReleaseDate(film),
                 "Дата релиза равная "
-                        + FilmController.FILM_BIRTHDAY
+                        + FILM_BIRTHDAY
                         + " не должна генерировать исключение");
     }
 
     @Test
     public void releaseDateIsAfterTargetDateValidationTest() {
-        film.setReleaseDate(FilmController.FILM_BIRTHDAY.plus(Period.ofDays(1)));
-        Assertions.assertDoesNotThrow(() -> FilmController.validateReleaseDate(film),
+        film.setReleaseDate(FILM_BIRTHDAY.plus(Period.ofDays(1)));
+        Assertions.assertDoesNotThrow(() -> validateReleaseDate(film),
                 "Дата релиза после "
-                        + FilmController.FILM_BIRTHDAY
+                        + FILM_BIRTHDAY
                         + " не должна генерировать исключение");
     }
 
@@ -108,7 +113,7 @@ public class FilmControllerTests {
     public void negativeDurationValidationTest() {
         film.setDuration(-1L);
         Assertions.assertThrows(ValidationException.class,
-                () -> FilmController.validateDuration(film),
+                () -> validateDuration(film),
                 "Отрицательная продолжительность должна генерировать исключение ValidationException");
     }
 
@@ -116,14 +121,14 @@ public class FilmControllerTests {
     public void zeroDurationValidationTest() {
         film.setDuration(0L);
         Assertions.assertThrows(ValidationException.class,
-                () -> FilmController.validateDuration(film),
+                () -> validateDuration(film),
                 "Нулевая продолжительность должна генерировать исключение ValidationException");
     }
 
     @Test
     public void positiveDurationValidationTest() {
         film.setDuration(1L);
-        Assertions.assertDoesNotThrow(() -> FilmController.validateDuration(film),
+        Assertions.assertDoesNotThrow(() -> validateDuration(film),
                 "Положительная продолжительность не должна генерировать исключения");
     }
 
@@ -134,7 +139,7 @@ public class FilmControllerTests {
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setDuration(100L);
 
-        Assertions.assertDoesNotThrow(() -> FilmController.validateFilm(film),
+        Assertions.assertDoesNotThrow(() -> validateFilm(film),
                 "Фильм с валидными полями не должен генерировать исключение");
     }
 

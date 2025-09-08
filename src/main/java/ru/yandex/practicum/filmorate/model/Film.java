@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDate;
 
