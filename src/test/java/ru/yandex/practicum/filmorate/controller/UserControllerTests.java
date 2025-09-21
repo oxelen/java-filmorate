@@ -9,6 +9,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.time.LocalDate;
 import java.time.Period;
 
+import static ru.yandex.practicum.filmorate.storage.user.UserValidator.*;
+
 public class UserControllerTests {
     private User user;
 
@@ -20,7 +22,7 @@ public class UserControllerTests {
     @Test
     public void nullEmailValidationTest() {
         Assertions.assertThrows(ValidationException.class,
-                () -> UserController.validateEmail(user),
+                () -> validateEmail(user),
                 "Null email должен генерировать исключение ValidationException");
     }
 
@@ -28,7 +30,7 @@ public class UserControllerTests {
     public void emptyEmailValidationTest() {
         user.setEmail("");
         Assertions.assertThrows(ValidationException.class,
-                () -> UserController.validateEmail(user),
+                () -> validateEmail(user),
                 "Пустой email должен генерировать исключение ValidationException");
     }
 
@@ -36,21 +38,21 @@ public class UserControllerTests {
     public void emailWithoutAtValidationTest() {
         user.setEmail("example");
         Assertions.assertThrows(ValidationException.class,
-                () -> UserController.validateEmail(user),
+                () -> validateEmail(user),
                 "Email без знака \"@\" должен генерировать исключение ValidationException");
     }
 
     @Test
     public void correctEmailValidationTest() {
         user.setEmail("example@test");
-        Assertions.assertDoesNotThrow(() -> UserController.validateEmail(user),
+        Assertions.assertDoesNotThrow(() -> validateEmail(user),
                 "Валидный email не должен генерировать исключение");
     }
 
     @Test
     public void nullLoginValidationTest() {
         Assertions.assertThrows(ValidationException.class,
-                () -> UserController.validateLogin(user),
+                () -> validateLogin(user),
                 "Null логин должен генерировать исключение ValidationException");
     }
 
@@ -58,7 +60,7 @@ public class UserControllerTests {
     public void emptyLoginValidationTest() {
         user.setLogin("");
         Assertions.assertThrows(ValidationException.class,
-                () -> UserController.validateLogin(user),
+                () -> validateLogin(user),
                 "Пустой логин должен генерировать исключение ValidationException");
     }
 
@@ -66,21 +68,21 @@ public class UserControllerTests {
     public void loginWithSpacesValidationTest() {
         user.setLogin("test test");
         Assertions.assertThrows(ValidationException.class,
-                () -> UserController.validateLogin(user),
+                () -> validateLogin(user),
                 "Логин с пробелами должен генерировать исключение ValidationException");
     }
 
     @Test
     public void correctLoginValidationTest() {
         user.setLogin("test_login");
-        Assertions.assertDoesNotThrow(() -> UserController.validateLogin(user),
+        Assertions.assertDoesNotThrow(() -> validateLogin(user),
                 "Валидный логин не должен генерировать исключение");
     }
 
     @Test
     public void nullNameValidationTest() {
         user.setLogin("login");
-        UserController.validateName(user);
+        validateName(user);
         Assertions.assertEquals(user.getName(), user.getLogin(),
                 "При null имени ему должно присваиваться значение логина");
     }
@@ -88,7 +90,7 @@ public class UserControllerTests {
     @Test
     public void nowBirthdayValidationTest() {
         user.setBirthday(LocalDate.now());
-        Assertions.assertDoesNotThrow(() -> UserController.validateBirthday(user),
+        Assertions.assertDoesNotThrow(() -> validateBirthday(user),
                 "Валидный день рождения не должен генерировать исключение");
     }
 
@@ -96,7 +98,7 @@ public class UserControllerTests {
     public void futureBirthdayValidationTest() {
         user.setBirthday(LocalDate.now().plus(Period.ofDays(1)));
         Assertions.assertThrows(ValidationException.class,
-                () -> UserController.validateBirthday(user),
+                () -> validateBirthday(user),
                 "День рождения в будущем должен генерировать исключение ValidationException");
     }
 
@@ -107,7 +109,7 @@ public class UserControllerTests {
         user.setName("name");
         user.setBirthday(LocalDate.of(2000, 1, 1));
 
-        Assertions.assertDoesNotThrow(() -> UserController.validateUser(user),
+        Assertions.assertDoesNotThrow(() -> validateUser(user),
                 "Валидный пользователь не должен генерировать исключение");
     }
 }

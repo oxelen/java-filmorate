@@ -10,11 +10,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @Slf4j
 public class FilmorateApplication {
-	public static void main(String[] args) {
-		((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.INFO);
+    public static void main(String[] args) {
+        ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.INFO);
 
-		log.info("Starting a new Spring Application");
-		SpringApplication.run(FilmorateApplication.class, args);
-	}
-
+        log.info("Starting a new Spring Application");
+        SpringApplication.run(FilmorateApplication.class, args);
+    }
 }
