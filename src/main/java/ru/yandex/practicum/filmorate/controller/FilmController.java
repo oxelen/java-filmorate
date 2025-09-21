@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -12,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static ru.yandex.practicum.filmorate.controller.PathVariableValidator.*;
+import static ru.yandex.practicum.filmorate.controller.PathVariableValidator.checkIds;
 
 @RestController
 @RequestMapping("/films")
@@ -56,8 +55,7 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Map<String, Long> likeFilm(@PathVariable Long id,
-                                      @PathVariable Long userId) {
+    public Map<String, Long> likeFilm(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Running PUT method likeFilm");
 
         checkIds(id, userId);
@@ -65,8 +63,7 @@ public class FilmController {
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Map<String, Long> deleteLike(@PathVariable Long id,
-                                        @PathVariable Long userId) {
+    public Map<String, Long> deleteLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Running DELETE method: deleteLike");
 
         checkIds(id, userId);

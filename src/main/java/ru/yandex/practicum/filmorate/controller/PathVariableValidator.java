@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 @Slf4j
 public class PathVariableValidator {
     public static void checkIds(Long... ids) {
-        for(Long id : ids) {
+        for (Long id : ids) {
             if (id == null) {
                 log.warn("User id is null");
                 throw new ConditionsNotMetException("Id должен быть указан");
