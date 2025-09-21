@@ -109,8 +109,7 @@ public class UserService {
         if (friends.contains(deletedUserId)) {
             log.trace("User with id = {} deleted from list of User with id = {}", deletedUserId, userId);
             friends.remove(deletedUserId);
-        }
-        else {
+        } else {
             log.warn("User with id = {} not friend of User with id = {}", deletedUserId, userId);
             throw new ConditionsNotMetException("Пользователи с id = " + userId + ", " + deletedUserId + " не друзья");
         }
