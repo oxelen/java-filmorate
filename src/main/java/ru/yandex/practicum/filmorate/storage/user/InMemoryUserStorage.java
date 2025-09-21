@@ -15,7 +15,7 @@ import static ru.yandex.practicum.filmorate.storage.user.UserValidator.*;
 
 @Slf4j
 @Component
-public class InMemoryUserStorage implements UserStorage{
+public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
 
     @Override
