@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,13 +27,29 @@ public class FilmService {
         this.userStorage = userStorage;
     }
 
+    public Film create(Film film) {
+        return filmStorage.create(film);
+    }
+
+    public Film update(Film newFilm) {
+        return filmStorage.update(newFilm);
+    }
+
+    public Collection<Film> findAll() {
+        return filmStorage.findAll();
+    }
+
+    public Film findById(Long id) {
+        return filmStorage.findById(id);
+    }
+
     public Map<String, Long> likeFilm(Long filmId, Long userId) {
         log.debug("Starting likeFilm. film id = {}, userId = {}", filmId, userId);
 
         if (!userStorage.containsUser(userId))
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
 
-        Set<Long> likes = filmStorage.findById(filmId).getLikes();
+        Set<Long> likes = findById(filmId).getLikes();
         if (likes.contains(userId)) {
             log.warn("User (id = {}) already likes film (id = {})", userId, filmId);
             throw new DuplicatedDataException("Пользователь с id = " + userId + " уже лайкнул фильм с id = " + filmId);
@@ -51,7 +68,7 @@ public class FilmService {
         if (!userStorage.containsUser(userId))
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
 
-        Set<Long> likes = filmStorage.findById(filmId).getLikes();
+        Set<Long> likes = findById(filmId).getLikes();
         if (!likes.contains(userId)) {
             log.warn("Likes of film (id = {}) does not contains like from user (id = {})", filmId, userId);
             throw new ConditionsNotMetException("В списке лайков фильма с id = " + filmId
@@ -68,7 +85,7 @@ public class FilmService {
     public List<Film> findMostPopularFilms(int count) {
         log.debug("Starting findMostPopularFilms");
 
-        return filmStorage.findAll().stream()
+        return findAll().stream()
                 .sorted((o1, o2) -> (o2.getLikes().size() - o1.getLikes().size()))
                 .limit(count)
                 .collect(Collectors.toList());

@@ -23,6 +23,22 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
+    public User create(User user) {
+        return userStorage.create(user);
+    }
+
+    public User update(User newUser) {
+        return userStorage.update(newUser);
+    }
+
+    public Collection<User> findAll() {
+        return userStorage.findAll();
+    }
+
+    public User findById(Long id) {
+        return userStorage.findById(id);
+    }
+
     public Map<String, Long> addFriend(Long firstId, Long secondId) {
         log.debug("Starting addFriend, firstId = {}, secondId = {}", firstId, secondId);
         if (!userStorage.containsUser(firstId)) {
@@ -65,8 +81,7 @@ public class UserService {
     public Collection<User> findAllFriends(Long id) {
         log.debug("Starting findAllFriends, id = {}", id);
 
-        return userStorage
-                .findById(id)
+        return findById(id)
                 .getFriends()
                 .stream()
                 .map(userStorage::findById)
@@ -76,18 +91,18 @@ public class UserService {
     public Collection<User> findCommonFriends(Long firstId, Long secondId) {
         log.debug("Starting findCommonFriends, firstId = {}, secondId = {}", firstId, secondId);
 
-        Set<Long> firstFriends = userStorage.findById(firstId).getFriends();
-        Set<Long> secondFriends = userStorage.findById(secondId).getFriends();
+        Set<Long> firstFriends = findById(firstId).getFriends();
+        Set<Long> secondFriends = findById(secondId).getFriends();
 
         return firstFriends.stream()
                 .filter(secondFriends::contains)
-                .map(userStorage::findById)
+                .map(this::findById)
                 .collect(Collectors.toList());
     }
 
     private void addUserToFriendList(Long userId, Long addedUserId) {
         log.debug("Starting addUserToFriendList userId = {}, addedUserId = {}", userId, addedUserId);
-        Set<Long> friends = userStorage.findById(userId).getFriends();
+        Set<Long> friends = findById(userId).getFriends();
 
         if (friends.contains(addedUserId)) {
             log.warn("User with id = {} is already friend of User with id = {}", addedUserId, userId);
@@ -99,7 +114,7 @@ public class UserService {
 
     private void deleteFromFriendList(Long userId, Long deletedUserId) {
         log.debug("Starting deleteFromFriendList, userId = {}, deletedUserId = {}", userId, deletedUserId);
-        Set<Long> friends = userStorage.findById(userId).getFriends();
+        Set<Long> friends = findById(userId).getFriends();
 
         if (friends.isEmpty()) {
             log.warn("List friends of User with id = {} is null or empty", userId);

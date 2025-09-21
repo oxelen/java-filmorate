@@ -2,25 +2,21 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
 import java.util.Map;
 
-import static ru.yandex.practicum.filmorate.controller.PathVariableValidator.*;
+import static ru.yandex.practicum.filmorate.controller.PathVariableValidator.checkIds;
 
 @RestController
 @RequestMapping("/users")
 @Slf4j
 public class UserController {
-    private final UserStorage userStorage;
     private final UserService userService;
 
-    public UserController(UserStorage userStorage, UserService userService) {
-        this.userStorage = userStorage;
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
@@ -28,21 +24,21 @@ public class UserController {
     public User create(@RequestBody User user) {
         log.info("Running POST method: create user");
 
-        return userStorage.create(user);
+        return userService.create(user);
     }
 
     @PutMapping
     public User update(@RequestBody User newUser) {
         log.info("Running PUT method: update user");
 
-        return userStorage.update(newUser);
+        return userService.update(newUser);
     }
 
     @GetMapping
     public Collection<User> findAll() {
         log.info("Running GET method: get all users");
 
-        return userStorage.findAll();
+        return userService.findAll();
     }
 
     @GetMapping("/{id}")
@@ -50,12 +46,12 @@ public class UserController {
         log.info("Running GET method: find user by id");
 
         checkIds(userId);
-        return userStorage.findById(userId);
+        return userService.findById(userId);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     public Map<String, Long> addFriend(@PathVariable Long id,
-                               @PathVariable Long friendId) {
+                                       @PathVariable Long friendId) {
         log.info("Running PUT method: addFriend");
 
         checkIds(id, friendId);
@@ -72,7 +68,7 @@ public class UserController {
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public Map<String, Long> deleteFriend(@PathVariable Long id,
-                                  @PathVariable Long friendId) {
+                                          @PathVariable Long friendId) {
         log.info("Running DELETE method: delete friend");
 
         checkIds(id, friendId);
