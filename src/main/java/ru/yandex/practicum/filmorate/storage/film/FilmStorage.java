@@ -10,4 +10,8 @@ public interface FilmStorage {
     Film update(Film newFilm);
 
     Collection<Film> findAll();
+
+    Film findById(Long id);
+
+    boolean containsFilm(Long id);
 }

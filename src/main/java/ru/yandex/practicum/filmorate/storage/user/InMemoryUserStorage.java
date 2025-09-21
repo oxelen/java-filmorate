@@ -2,11 +2,9 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
@@ -33,7 +31,6 @@ public class InMemoryUserStorage implements UserStorage{
         log.debug("User: {}. Set id = {}", user.getEmail(), user.getId());
 
         users.put(user.getId(), user);
-        log.info("POST method: create user (id = {}) worked successfully", user.getId());
 
         return user;
     }
@@ -46,26 +43,43 @@ public class InMemoryUserStorage implements UserStorage{
         }
         log.debug("Starting update user, id = {}", newUser.getId());
 
-        if (users.containsKey(newUser.getId())) {
-            log.trace("Found user with id = {}", newUser.getId());
-
+        if (containsUser(newUser.getId())) {
             User oldUser = users.get(newUser.getId());
             updateUserFields(oldUser, newUser);
-            log.info("PUT method: update user (id = {}) worked successfully", oldUser.getId());
 
             return oldUser;
         }
-        log.warn("Not found user with id = {}", newUser.getId());
         throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
     }
 
     @Override
     public Collection<User> findAll() {
+        log.debug("Starting findAll");
         return users.values();
     }
 
+    @Override
+    public User findById(Long id) {
+        log.debug("Starting find user, id = {}", id);
+        if (containsUser(id)) {
+            return users.get(id);
+        }
+        throw new NotFoundException("Пользователь с id = " + id + " не найден");
+    }
+
+    @Override
+    public boolean containsUser(Long id) {
+        log.debug("Starting contains user, id = {}", id);
+        if (users.containsKey(id)) {
+            log.debug("Found user with id = {}", id);
+            return true;
+        }
+        log.warn("Not found user with id = {}", id);
+        return false;
+    }
+
     private void updateUserFields(User oldUser, User newUser) {
-        log.debug("Starting update User fields, id = {}", newUser.getId());
+        log.trace("Starting update User fields, id = {}", newUser.getId());
         if (newUser.getEmail() != null && !oldUser.getEmail().equals(newUser.getEmail())) {
             validateEmail(newUser);
             checkEmail(newUser);
@@ -91,6 +105,7 @@ public class InMemoryUserStorage implements UserStorage{
     }
 
     private void checkEmail(User user) {
+        log.trace("Starting checkEmail, email = {}", user.getEmail());
         if (users.values()
                 .stream()
                 .map(User::getEmail)
@@ -103,6 +118,7 @@ public class InMemoryUserStorage implements UserStorage{
     }
 
     private long getNextId() {
+        log.trace("Starting getNextId");
         long currentId = users.keySet()
                 .stream()
                 .mapToLong(id -> id)

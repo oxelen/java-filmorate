@@ -10,4 +10,8 @@ public interface UserStorage {
     User update(User newUser);
 
     Collection<User> findAll();
+
+    User findById(Long id);
+
+    boolean containsUser(Long id);
 }

@@ -4,13 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static ru.yandex.practicum.filmorate.storage.film.FilmValidator.*;
@@ -48,7 +46,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
         log.debug("Starting update film: {}, id = {}", newFilm.getName(), newFilm.getId());
 
-        if (films.containsKey(newFilm.getId())) {
+        if (containsFilm(newFilm.getId())) {
             log.trace("Found film with id = {}", newFilm.getId());
 
             Film oldFilm = films.get(newFilm.getId());
@@ -64,6 +62,27 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Collection<Film> findAll() {
         return films.values();
+    }
+
+    @Override
+    public Film findById(Long id) {
+        log.debug("Starting findById, id = {}", id);
+
+        if (!containsFilm(id))
+            throw new NotFoundException("Фильм с id = " + id + " не найден");
+
+        return films.get(id);
+    }
+
+    @Override
+    public boolean containsFilm(Long id) {
+        log.debug("Starting containsFilm, id = {}", id);
+        if (films.containsKey(id)) {
+            log.debug("Found film with, id = {}", id);
+            return true;
+        }
+        log.warn("Not found film, id = {}", id);
+        return false;
     }
 
     private void updateFilmFields(Film oldFilm, Film newFilm) {
