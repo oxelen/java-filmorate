@@ -10,9 +10,9 @@ import java.util.Optional;
 
 @Repository
 public class MPAsRepository extends BaseDbStorage<MPA> {
-    private final String FIND_MPA_QUERY = "SELECT * FROM MPAs WHERE id = ?";
-    private final String FIND_ID_QUERY = "SELECT id FROM MPAs WHERE name = ?";
-    private final String FIND_ALL_QUERY = "SELECT * FROM MPAs";
+    private final static String FIND_MPA_QUERY = "SELECT * FROM MPAs WHERE id = ?";
+    private final static String FIND_ID_QUERY = "SELECT id FROM MPAs WHERE name = ?";
+    private final static String FIND_ALL_QUERY = "SELECT * FROM MPAs";
 
     public MPAsRepository(JdbcTemplate jdbc, RowMapper<MPA> mapper) {
         super(jdbc, mapper);

@@ -9,9 +9,9 @@ import java.util.List;
 
 @Repository
 public class LikesRepository extends BaseDbStorage<Long> {
-    private final String ALL_LIKES_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
-    private final String INSERT_QUERY = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
-    private final String DELETE_QUERY = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
+    private final static String ALL_LIKES_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
+    private final static String INSERT_QUERY = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+    private final static String DELETE_QUERY = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
 
     public LikesRepository(JdbcTemplate jdbc,
                            @Qualifier("likesRowMapper") RowMapper<Long> mapper) {

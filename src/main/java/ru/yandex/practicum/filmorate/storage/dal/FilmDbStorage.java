@@ -16,18 +16,18 @@ import java.util.Collection;
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final MPAsRepository mpasRepository;
 
-    private final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, MPA_id)" +
+    private final static String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, MPA_id)" +
             "VALUES (?, ?, ?, ?, ?)";
-    private final String UPDATE_QUERY = "UPDATE films " +
+    private final static String UPDATE_QUERY = "UPDATE films " +
             "SET name = ?, " +
             "description = ?, " +
             "release_date = ?, " +
             "duration = ?, " +
             "MPA_id = ? " +
             "WHERE id = ?";
-    private final String FIND_ALL_QUERY = "SELECT * FROM films";
-    private final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
-    private final String INSERT_FILM_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) " +
+    private final static String FIND_ALL_QUERY = "SELECT * FROM films";
+    private final static String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
+    private final static String INSERT_FILM_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) " +
             "VALUES (?, ?)";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, MPAsRepository mpasRepository) {
