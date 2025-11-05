@@ -11,11 +11,11 @@ import java.util.Optional;
 
 @Repository("userDbStorage")
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
-    private final static String INSERT_QUERY = "INSERT INTO users (email, login, name, birthday)" +
+    private static final String INSERT_QUERY = "INSERT INTO users (email, login, name, birthday)" +
             "VALUES (?, ?, ?, ?)";
-    private final static String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
-    private final static String FIND_ALL_QUERY = "SELECT * FROM users";
-    private final static String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";
+    private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
+    private static final String FIND_ALL_QUERY = "SELECT * FROM users";
+    private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);

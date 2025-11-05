@@ -9,10 +9,10 @@ import java.util.List;
 
 @Repository
 public class FriendsRepository extends BaseDbStorage<Long> {
-    private final static String FIND_ALL_FRIENDS_QUERY = "SELECT second_id FROM friends WHERE first_id = ?";
-    private final static String INSERT_QUERY = "INSERT INTO friends (first_id, second_id) " +
+    private static final String FIND_ALL_FRIENDS_QUERY = "SELECT second_id FROM friends WHERE first_id = ?";
+    private static final String INSERT_QUERY = "INSERT INTO friends (first_id, second_id) " +
             "VALUES (?, ?)";
-    private final static String DELETE_QUERY = "DELETE FROM friends WHERE first_id = ? AND second_id = ?";
+    private static final String DELETE_QUERY = "DELETE FROM friends WHERE first_id = ? AND second_id = ?";
 
     public FriendsRepository(JdbcTemplate jdbc,
                              @Qualifier("friendsRowMapper") RowMapper<Long> mapper) {

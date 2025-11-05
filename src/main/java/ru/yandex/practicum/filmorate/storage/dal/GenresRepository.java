@@ -11,13 +11,13 @@ import java.util.List;
 
 @Repository
 public class GenresRepository extends BaseDbStorage<Genre> {
-    private final static String FIND_FILM_GENRES_QUERY = "SELECT * " +
+    private static final String FIND_FILM_GENRES_QUERY = "SELECT * " +
             "FROM genres " +
             "WHERE id IN (SELECT genre_id " +
             "FROM film_genres " +
             "WHERE film_id = ?)";
-    private final static String FIND_ALL_QUERY = "SELECT * FROM genres";
-    private final static String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE id = ?";
+    private static final String FIND_ALL_QUERY = "SELECT * FROM genres";
+    private static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE id = ?";
 
     public GenresRepository(JdbcTemplate jdbc,
                             @Qualifier("genresRowMapper") RowMapper<Genre> mapper) {
