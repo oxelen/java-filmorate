@@ -1,19 +1,48 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 
 import static ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage.DESCRIPTION_MAX_SIZE;
 import static ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage.FILM_BIRTHDAY;
 
 @Slf4j
 public class FilmValidator {
+    private static final int MAX_MPAS = 5;
+    private static final int MAX_GENRES = 6;
+
     public static void validateFilm(Film film) {
         validateName(film);
         validateDescription(film);
         validateReleaseDate(film);
         validateDuration(film);
+        validateMPA(film);
+        validateGenres(film);
+    }
+
+    public static void validateGenres(Film film) {
+        if (!film.getGenres().stream()
+                .map(Genre::getId)
+                .filter(id -> id > MAX_GENRES)
+                .toList()
+                .isEmpty()) {
+            log.warn("Not valid genre");
+            throw new NotFoundException("Неправильный id genre");
+        }
+
+        log.trace("Genre is valid");
+    }
+
+    public static void validateMPA(Film film) {
+        if (film.getMpa().getId() > MAX_MPAS) {
+            log.warn("Not valid MPA");
+            throw new NotFoundException("Неправильный id MPA");
+        }
+
+        log.trace("MPA is valid");
     }
 
     public static void validateName(Film film) {

@@ -18,7 +18,7 @@ public class FilmControllerTests {
 
     @BeforeEach
     public void setUp() {
-        film = new Film();
+        film = Film.builder().build();
     }
 
     @Test

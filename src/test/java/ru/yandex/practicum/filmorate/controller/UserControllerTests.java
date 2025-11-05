@@ -16,7 +16,7 @@ public class UserControllerTests {
 
     @BeforeEach
     public void setUp() {
-        user = new User();
+        user = User.builder().build();
     }
 
     @Test

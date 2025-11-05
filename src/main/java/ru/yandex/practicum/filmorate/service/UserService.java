@@ -1,13 +1,13 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
-import ru.yandex.practicum.filmorate.exception.NoContentException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.dal.FriendsRepository;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserValidator;
 
 import java.util.Collection;
 import java.util.Map;
@@ -18,16 +18,20 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
     private final UserStorage userStorage;
+    private final FriendsRepository friendsRepository;
 
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, FriendsRepository friendsRepository) {
         this.userStorage = userStorage;
+        this.friendsRepository = friendsRepository;
     }
 
     public User create(User user) {
+        UserValidator.validateUser(user);
         return userStorage.create(user);
     }
 
     public User update(User newUser) {
+        UserValidator.validateUser(newUser);
         return userStorage.update(newUser);
     }
 
@@ -36,7 +40,7 @@ public class UserService {
     }
 
     public User findById(Long id) {
-        return userStorage.findById(id);
+        return userStorage.findById(id).orElseThrow(() -> new NotFoundException("Пользователь не нашелся"));
     }
 
     public Map<String, Long> addFriend(Long firstId, Long secondId) {
@@ -51,11 +55,9 @@ public class UserService {
         addUserToFriendList(firstId, secondId);
         log.trace("secondId added to friends of firstId");
 
-        addUserToFriendList(secondId, firstId);
-        log.trace("firstId added to friends of secondId");
+        friendsRepository.create(firstId, secondId);
 
-        return Map.of("firstId", firstId,
-                "secondId", secondId);
+        return Map.of("firstId", firstId, "secondId", secondId);
     }
 
     public Map<String, Long> deleteFriend(Long firstId, Long secondId) {
@@ -71,21 +73,15 @@ public class UserService {
         deleteFromFriendList(firstId, secondId);
         log.trace("secondId removed from firstId friends");
 
-        deleteFromFriendList(secondId, firstId);
-        log.trace("firstId removed from secondId friends");
+        friendsRepository.delete(firstId, secondId);
 
-        return Map.of("firstId", firstId,
-                "secondId", secondId);
+        return Map.of("firstId", firstId, "secondId", secondId);
     }
 
     public Collection<User> findAllFriends(Long id) {
         log.debug("Starting findAllFriends, id = {}", id);
 
-        return findById(id)
-                .getFriends()
-                .stream()
-                .map(userStorage::findById)
-                .collect(Collectors.toList());
+        return findById(id).getFriends().stream().map(this::findById).collect(Collectors.toList());
     }
 
     public Collection<User> findCommonFriends(Long firstId, Long secondId) {
@@ -94,10 +90,7 @@ public class UserService {
         Set<Long> firstFriends = findById(firstId).getFriends();
         Set<Long> secondFriends = findById(secondId).getFriends();
 
-        return firstFriends.stream()
-                .filter(secondFriends::contains)
-                .map(this::findById)
-                .collect(Collectors.toList());
+        return firstFriends.stream().filter(secondFriends::contains).map(this::findById).collect(Collectors.toList());
     }
 
     private void addUserToFriendList(Long userId, Long addedUserId) {

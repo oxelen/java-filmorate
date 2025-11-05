@@ -50,8 +50,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public Map<String, Long> addFriend(@PathVariable Long id,
-                                       @PathVariable Long friendId) {
+    public Map<String, Long> addFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.info("Running PUT method: addFriend");
 
         checkIds(id, friendId);
@@ -67,8 +66,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public Map<String, Long> deleteFriend(@PathVariable Long id,
-                                          @PathVariable Long friendId) {
+    public Map<String, Long> deleteFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.info("Running DELETE method: delete friend");
 
         checkIds(id, friendId);
@@ -76,8 +74,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public Collection<User> findCommonFriends(@PathVariable Long id,
-                                              @PathVariable Long otherId) {
+    public Collection<User> findCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
         log.info("Starting GET method: find CommonFriends");
 
         checkIds(id, otherId);
