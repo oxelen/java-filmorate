@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MPA;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -18,7 +19,7 @@ public class FilmControllerTests {
 
     @BeforeEach
     public void setUp() {
-        film = new Film();
+        film = Film.builder().build();
     }
 
     @Test
@@ -133,10 +134,13 @@ public class FilmControllerTests {
 
     @Test
     public void validateFilmTest() {
-        film.setName("name");
-        film.setDescription("description");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(100L);
+        Film film = Film.builder()
+                .name("test")
+                .description("test")
+                .releaseDate(LocalDate.now())
+                .duration(100L)
+                .mpa(MPA.builder().id(1L).build())
+                .build();
 
         Assertions.assertDoesNotThrow(() -> validateFilm(film),
                 "Фильм с валидными полями не должен генерировать исключение");
