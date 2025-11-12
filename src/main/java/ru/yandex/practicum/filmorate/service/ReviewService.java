@@ -8,6 +8,8 @@ import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.dal.ReviewsDbStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 
+import java.util.Collection;
+
 @Service
 public class ReviewService {
     private final ReviewStorage reviewsStorage;
@@ -35,5 +37,17 @@ public class ReviewService {
     public Review findById(Long id) {
         return reviewsStorage.findById(id).orElseThrow(()
                 -> new NotFoundException("Отзывв с id = " + id + " не найден"));
+    }
+
+    public Collection<Review> findAll() {
+        return reviewsStorage.findAll();
+    }
+
+    public Collection<Review> findAll(Long filmId, Integer count) {
+        return reviewsStorage.findAll(filmId, count);
+    }
+
+    public Review putLike(Long id, Long userId) {
+        return reviewsStorage.putLike(id, userId);
     }
 }

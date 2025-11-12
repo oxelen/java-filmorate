@@ -51,3 +51,9 @@ CREATE TABLE IF NOT EXISTS reviews (
     film_id BIGINT REFERENCES films,
     useful INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS reviews_likes (
+    review_id BIGINT REFERENCES reviews,
+    user_id BIGINT REFERENCES users,
+    status BOOLEAN --true: like; false: dislike
+);
