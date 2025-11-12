@@ -11,8 +11,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
 
-@Repository
-@Qualifier("filmDbStorage")
+@Repository("filmDbStorage")
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final MPAsRepository mpasRepository;
 
