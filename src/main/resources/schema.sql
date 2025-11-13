@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     useful INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS reviews_likes (
+CREATE TABLE IF NOT EXISTS reviews_ratings (
     review_id BIGINT REFERENCES reviews,
     user_id BIGINT REFERENCES users,
     status BOOLEAN --true: like; false: dislike

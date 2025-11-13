@@ -72,4 +72,34 @@ public class ReviewController {
 
         return reviewService.putLike(id, userId);
     }
+
+    @PutMapping("/{id}/dislike/{userId}")
+    public Review putDuslike(@PathVariable Long id,
+                             @PathVariable Long userId) {
+        log.info("Starting PUT METHOD put dislike");
+
+        PathVariableValidator.checkIds(id, userId);
+
+        return reviewService.putDislike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public boolean deleteLike(@PathVariable Long id,
+                               @PathVariable Long userId) {
+        log.info("Starting DELETE METHOD delete like");
+
+        PathVariableValidator.checkIds(id, userId);
+
+        return reviewService.deleteLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public boolean deleteDislike(@PathVariable Long id,
+                                 @PathVariable Long userId) {
+        log.info("Starting DELETE METHOD delete dislike");
+
+        PathVariableValidator.checkIds(id, userId);
+
+        return reviewService.deleteDislike(id, userId);
+    }
 }

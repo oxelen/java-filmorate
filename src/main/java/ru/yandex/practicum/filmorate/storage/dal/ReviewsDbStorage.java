@@ -4,12 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 @Repository("reviewsDbStorage")
@@ -24,11 +25,30 @@ public class ReviewsDbStorage extends BaseDbStorage<Review> implements ReviewSto
             "user_id = ?, film_id = ?, useful = ? WHERE id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM reviews WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM reviews WHERE id = ?";
-    private static final String FIND_ALL_QUERY = "SELECT * FROM reviews";
-    private static final String FIND_BY_FILM_ID_QUERY = "SELECT * FROM reviews WHERE film_id = ? LIMIT ?";
-    private static final String FIND_USER_LIKE_QUERY = "SELECT user" +
-            " FROM reviews_likes" +
+    private static final String FIND_ALL_QUERY = "SELECT * FROM reviews ORDER BY useful DESC";
+    private static final String FIND_BY_FILM_ID_QUERY = "SELECT *" +
+            " FROM reviews" +
+            " WHERE film_id = ?" +
+            " ORDER BY useful DESC" +
+            " LIMIT ?";
+    private static final String FIND_USER_LIKE_QUERY = "SELECT user_id" +
+            " FROM reviews_ratings" +
             " WHERE review_id = ? AND user_id = ? AND status = true";
+    private static final String FIND_USER_DISLIKE_QUERY = "SELECT user_id " +
+            "FROM reviews_ratings " +
+            "WHERE review_id = ? AND user_id = ? AND status = false";
+    private static final String INSERT_LIKE_QUERY = "INSERT INTO reviews_ratings (review_id, user_id, status) " +
+            "VALUES (?, ?, true)";
+    private static final String INSERT_DISLIKE_QUERY = "INSERT INTO reviews_ratings (review_id, user_id, status) + " +
+            "VALUES (?, ?, false)";
+    private static final String DELETE_LIKE_QUERY = "DELETE FROM reviews_ratings" +
+            " WHERE review_id = ?" +
+            " AND user_id = ?" +
+            " AND status = true";
+    private static final String DELETE_DISLIKE_QUERY = "DELETE FROM reviews_ratings " +
+            "WHERE review_id = ?" +
+            " AND user_id = ?" +
+            " AND status = false";
 
     public ReviewsDbStorage(JdbcTemplate jdbc,
                             RowMapper<Review> mapper,
@@ -105,15 +125,66 @@ public class ReviewsDbStorage extends BaseDbStorage<Review> implements ReviewSto
 
     @Override
     public Review putLike(Long id, Long userId) {
+        Review res = checkReviewId(id);
+        checkUserId(userId);
+
+        if (isUserLikeReview(id, userId)) {
+            throw new DuplicatedDataException("Пользователь с id = " + userId
+                    + " уже поставил лайк отзыву с id = " + id);
+        }
+
+        update(INSERT_LIKE_QUERY, id, userId);
+
+        return res;
+    }
+
+    @Override
+    public Review putDislike(Long id, Long userId) {
+        Review res = checkReviewId(id);
+        checkUserId(userId);
+
+        if (isUserDislikeReview(id, userId)) {
+            throw new DuplicatedDataException("Пользователь с id = " + userId
+                    + " уже поставил дизлайк отзыву с id = " + id);
+        }
+
+        update(INSERT_DISLIKE_QUERY, id, userId);
+
+        return res;
+    }
+
+    @Override
+    public boolean deleteLike(Long id, Long userId) {
         checkReviewId(id);
         checkUserId(userId);
 
+        if (!isUserLikeReview(id, userId)) {
+            throw new ConditionsNotMetException("Пользователь с id = " + userId
+                    + " не ставил лайк отзыву с id = " + id);
+        }
 
-        return null;
+        return delete(DELETE_LIKE_QUERY, id);
     }
 
-    private boolean isUserEstimateReview(Long id, Long userId) {
+    @Override
+    public boolean deleteDislike(Long id, Long userId) {
+        checkReviewId(id);
+        checkUserId(userId);
+
+        if (!isUserDislikeReview(id, userId)) {
+            throw new ConditionsNotMetException("Пользователь с id = " + userId
+                    + " не ставил дизлайк отзыву с id = " + id);
+        }
+
+        return delete(DELETE_DISLIKE_QUERY, id, userId);
+    }
+
+    private boolean isUserLikeReview(Long id, Long userId) {
         return findOne(FIND_USER_LIKE_QUERY, id, userId).isPresent();
+    }
+
+    private boolean isUserDislikeReview(Long id, Long userId) {
+        return findOne(FIND_USER_DISLIKE_QUERY, id, userId).isPresent();
     }
 
     private void checkUserAndFilmId(Long userId, Long filmId) {
@@ -139,13 +210,8 @@ public class ReviewsDbStorage extends BaseDbStorage<Review> implements ReviewSto
         }
     }
 
-    private boolean containsReview(Long id) {
-        return findById(id).isPresent();
-    }
-
-    private void checkReviewId(Long reviewId) {
-        if (!containsReview(reviewId)) {
-            throw new NotFoundException("Отзыв с id = " + reviewId + " не найден");
-        }
+    private Review checkReviewId(Long reviewId) {
+        return findById(reviewId).orElseThrow(()
+                -> new NotFoundException("Отзыв с id = " + reviewId + " не найден"));
     }
 }

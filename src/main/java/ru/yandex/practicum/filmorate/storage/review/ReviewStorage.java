@@ -19,4 +19,10 @@ public interface ReviewStorage {
     public Collection<Review> findAll(Long filmId, Integer count);
 
     public Review putLike(Long id, Long userId);
+
+    public Review putDislike(Long id, Long userId);
+
+    public boolean deleteLike(Long id, Long userId);
+
+    public boolean deleteDislike(Long id, Long userId);
 }

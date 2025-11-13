@@ -50,4 +50,16 @@ public class ReviewService {
     public Review putLike(Long id, Long userId) {
         return reviewsStorage.putLike(id, userId);
     }
+
+    public Review putDislike(Long id, Long userId) {
+        return reviewsStorage.putDislike(id, userId);
+    }
+
+    public boolean deleteLike(Long id, Long userId) {
+        return reviewsStorage.deleteLike(id, userId);
+    }
+
+    public boolean deleteDislike(Long id, Long userId) {
+        return reviewsStorage.deleteDislike(id, userId);
+    }
 }
