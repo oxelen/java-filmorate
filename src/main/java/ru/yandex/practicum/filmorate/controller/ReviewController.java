@@ -39,7 +39,7 @@ public class ReviewController {
     }
 
     @GetMapping("/{id}")
-    public Review findById(Long id) {
+    public Review findById(@PathVariable Long id) {
         log.info("Starting GET METHOD find by id");
         PathVariableValidator.checkIds(id);
 
@@ -93,7 +93,7 @@ public class ReviewController {
         return reviewService.deleteLike(id, userId);
     }
 
-    @DeleteMapping("/{id}/like/{userId}")
+    @DeleteMapping("/{id}/dislike/{userId}")
     public boolean deleteDislike(@PathVariable Long id,
                                  @PathVariable Long userId) {
         log.info("Starting DELETE METHOD delete dislike");
