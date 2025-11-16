@@ -25,14 +25,12 @@ public class FilmController {
     @PostMapping
     public Film create(@RequestBody Film film) {
         log.info("Running POST method: create film");
-
         return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@RequestBody Film newFilm) {
         log.info("Running PUT method: update film");
-
         return filmService.update(newFilm);
     }
 
@@ -75,5 +73,10 @@ public class FilmController {
         log.trace("Default most popular films count = {}", DEFAULT_COUNT);
 
         return filmService.findMostPopularFilms(count.orElse(DEFAULT_COUNT));
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(@PathVariable Long directorId, @RequestParam String sortBy) {
+        return filmService.getFilmsByDirector(directorId, sortBy);
     }
 }
