@@ -2,9 +2,12 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -21,4 +24,5 @@ public class Film {
     private final Set<Long> likes = new HashSet<>();
     private final MPA mpa;
     private final Set<Genre> genres = new HashSet<>();
+    private final List<Director> directors = new ArrayList<>();
 }
