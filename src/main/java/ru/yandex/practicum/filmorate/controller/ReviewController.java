@@ -47,18 +47,22 @@ public class ReviewController {
     }
 
     @GetMapping
-    public Collection<Review> findAll(@RequestParam Optional<Long> optionalFilmId,
-                                      @RequestParam Optional<Integer> optionalCount) {
+    public Collection<Review> findAll(@RequestParam("filmId") Optional<Long> optionalFilmId,
+                                      @RequestParam("count") Optional<Integer> optionalCount) {
         log.info("Starting GET METHOD find all reviews");
         final Integer DEFAULT_COUNT = 10;
         log.debug("default count = {}", DEFAULT_COUNT);
 
         if (optionalFilmId.isPresent()) {
+            Integer count = optionalCount.orElse(DEFAULT_COUNT);
             Long filmId = optionalFilmId.get();
+            log.debug("filmId = {}. Starting find reviews of this film. Count = {}", filmId, count);
+
             PathVariableValidator.checkIds(filmId);
 
-            return reviewService.findAll(filmId, optionalCount.orElse(DEFAULT_COUNT));
+            return reviewService.findAll(filmId, count);
         }
+        log.debug("filmId is null. Starting find all reviews");
 
         return reviewService.findAll();
     }
