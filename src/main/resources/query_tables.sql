@@ -1,0 +1,67 @@
+-- --------------------------------------------------------------------------------------------------------
+-- SELECT f.name, g.name AS genre
+-- FROM films f
+--          JOIN film_genres fg ON f.id = fg.film_id
+--          JOIN genres g ON fg.genre_id = g.id
+-- ORDER BY f.name;
+--
+-- --------------------------------------------------------------------------------------------------------
+-- SELECT u.login, f.name
+-- FROM likes l
+--          JOIN users u ON l.user_id = u.id
+--          JOIN films f ON l.film_id = f.id;
+--
+-- --------------------------------------------------------------------------------------------------------
+-- SELECT u2.login AS friend
+-- FROM friends f
+--          JOIN users u1 ON f.first_id = u1.id
+--          JOIN users u2 ON f.second_id = u2.id
+-- WHERE u1.id = 1;
+--
+-- --------------------------------------------------------------------------------------------------------
+--
+--
+-- SELECT f.name, g.name AS genre
+-- FROM films f
+--          JOIN film_genres fg ON f.id = fg.film_id
+--          JOIN genres g ON fg.genre_id = g.id
+-- ORDER BY f.name;
+--
+-- SELECT u.login, f.name
+-- FROM likes l
+--          JOIN users u ON l.user_id = u.id
+--          JOIN films f ON l.film_id = f.id;
+--
+-- SELECT u2.login AS friend
+-- FROM friends f
+--          JOIN users u1 ON f.first_id = u1.id
+--          JOIN users u2 ON f.second_id = u2.id
+-- WHERE u1.id = 1;
+--
+--
+-- --------------------------------------------------------------------------------------------------------
+--
+-- SELECT f.id,
+--        f.name,
+--        f.description,
+--        f.release_date,
+--        f.duration,
+--        m.name           AS mpa_name,
+--        COUNT(l.user_id) AS likes_count
+-- FROM films f
+--          JOIN
+--      likes l ON f.id = l.film_id
+--          JOIN
+--      film_genres fg ON f.id = fg.film_id
+--          JOIN
+--      genres g ON fg.genre_id = g.id
+--          JOIN
+--      MPAs m ON f.MPA_id = m.id
+-- WHERE g.id = :genreId                           -- Фильтр по ID жанра
+--   AND EXTRACT(YEAR FROM f.release_date) = :year -- Фильтр по году
+-- GROUP BY f.id, f.name, f.description, f.release_date, f.duration, m.name
+-- ORDER BY likes_count DESC
+-- LIMIT :count;
+--
+--
+--

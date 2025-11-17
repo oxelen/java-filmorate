@@ -2,11 +2,12 @@ package ru.yandex.practicum.filmorate.storage.dal;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.dal.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
@@ -16,6 +17,19 @@ import java.util.List;
 @Qualifier("filmDbStorage")
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final MPAsRepository mpasRepository;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final FilmRowMapper filmRowMapper;  // ← Добавлено поле
+
+    // Конструктор
+    public FilmDbStorage(JdbcTemplate jdbcTemplate,
+                         FilmRowMapper filmRowMapper,
+                         MPAsRepository mpasRepository,
+                         NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+        super(jdbcTemplate, filmRowMapper);
+        this.mpasRepository = mpasRepository;
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+        this.filmRowMapper = filmRowMapper;  // ← Сохраняем в поле
+    }
 
     private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, MPA_id)" +
             "VALUES (?, ?, ?, ?, ?)";
@@ -31,11 +45,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) " +
             "VALUES (?, ?)";
 
-    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, MPAsRepository mpasRepository) {
-        super(jdbc, mapper);
-        this.mpasRepository = mpasRepository;
-    }
-
     @Override
     public Film create(Film film) {
         long id = insert(INSERT_QUERY,
@@ -47,9 +56,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         );
 
         film.setId(id);
-
         updGenres(film);
-
         return film;
     }
 
@@ -62,9 +69,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 newFilm.getDuration(),
                 newFilm.getMpa().getId(),
                 newFilm.getId());
-
         updGenres(newFilm);
-
         return newFilm;
     }
 
@@ -75,7 +80,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public Film findById(Long id) {
-        return findOne(FIND_BY_ID_QUERY, id).orElseThrow(() -> new NotFoundException("Фильм не найден"));
+        return findOne(FIND_BY_ID_QUERY, id)
+                .orElseThrow(() -> new NotFoundException("Фильм не найден"));
     }
 
     @Override
@@ -85,12 +91,41 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
-        return List.of();
+        String sql = """
+                    SELECT
+                        f.id,
+                        f.name,
+                        f.description,
+                        f.release_date,
+                        f.duration,
+                        f.MPA_id,
+                        COUNT(l.user_id) AS likes_count
+                    FROM films f
+                    JOIN likes l ON f.id = l.film_id
+                    JOIN film_genres fg ON f.id = fg.film_id
+                    JOIN genres g ON fg.genre_id = g.id
+                    JOIN MPAs m ON f.MPA_id = m.id
+                    WHERE g.id = :genreId
+                      AND EXTRACT(YEAR FROM f.release_date) = :year
+                    GROUP BY f.id, f.name, f.description, f.release_date, f.duration, f.MPA_id
+                    ORDER BY likes_count DESC
+                    LIMIT :count
+                """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("genreId", genreId)
+                .addValue("year", year)
+                .addValue("count", count);
+
+        return namedParameterJdbcTemplate.query(sql, params, filmRowMapper);  // Теперь работает!
     }
 
     private void updGenres(Film film) {
+        if (film.getGenres() == null) return;
+
         film.getGenres().stream()
-                .map(Genre::getId)
-                .forEach(genre_id -> insert(INSERT_FILM_GENRE_QUERY, film.getId(), genre_id));
+                .filter(genre -> genre.getId() != null)
+                .distinct()
+                .forEach(genre -> insert(INSERT_FILM_GENRE_QUERY, film.getId(), genre.getId()));
     }
 }
