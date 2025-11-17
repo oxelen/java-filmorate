@@ -245,6 +245,28 @@ public class ReviewsDbStorage extends BaseDbStorage<Review> implements ReviewSto
         return delete(DELETE_DISLIKE_QUERY, id, userId);
     }
 
+    @Override
+    public void deleteReviewByFilmConnection(Long filmId) {
+        jdbc.queryForList("SELECT id FROM reviews WHERE film_id = ?", Long.class, filmId)
+                .forEach((id) -> {
+                    delete("DELETE FROM reviews_ratings WHERE review_id = ?", id);
+
+                    this.deleteById(id);
+                });
+    }
+
+    @Override
+    public void deleteReviewByUserConnection(Long userId) {
+        delete("DELETE FROM reviews_ratings WHERE user_id = ?", userId);
+
+        jdbc.queryForList("SELECT id FROM reviews WHERE user_id = ?", Long.class, userId)
+                .forEach((id) -> {
+                    delete("DELETE FROM reviews_ratings WHERE review_id = ?", id);
+
+                    this.deleteById(id);
+                });
+    }
+
     private boolean isUserLikeReview(Long id, Long userId) {
         log.trace("Start isUserLikeReview in reviewDb");
 

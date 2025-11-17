@@ -5,7 +5,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 
 @Slf4j
-public class ReviwValidator {
+public class ReviewValidator {
     public static void validateReview(Review review) {
         validateContent(review);
         validateUserId(review);

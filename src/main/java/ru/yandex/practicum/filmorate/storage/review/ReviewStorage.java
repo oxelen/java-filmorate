@@ -25,4 +25,8 @@ public interface ReviewStorage {
     public boolean deleteLike(Long id, Long userId);
 
     public boolean deleteDislike(Long id, Long userId);
+
+    public void deleteReviewByFilmConnection(Long filmId);
+
+    public void deleteReviewByUserConnection(Long userId);
 }

@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dao;
 
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,6 @@ import ru.yandex.practicum.filmorate.storage.dal.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,8 +31,6 @@ public class ReviewsDbTests {
     private final ReviewsDbStorage reviewsDbStorage;
     private final FilmDbStorage filmDbStorage;
     private final UserDbStorage userDbStorage;
-    private Long filmId;
-    private Long userId;
 
     @BeforeEach
     public void setup() {
@@ -52,6 +50,12 @@ public class ReviewsDbTests {
 
         filmDbStorage.create(film);
         userDbStorage.create(user);
+    }
+
+    @AfterEach
+    public void teardown() {
+        reviewsDbStorage.deleteReviewByFilmConnection(1L);
+        reviewsDbStorage.deleteReviewByUserConnection(1L);
     }
 
     @Test
@@ -221,7 +225,127 @@ public class ReviewsDbTests {
 
         assertThat(found).isNotNull();
         assertThat(found.size()).isEqualTo(1);
-        assertThat(found.stream().findFirst()).isEqualTo(target.get(1));
-        assertThat(found.containsAll(List.of(target.getFirst(), target.getLast()))).isFalse();
+        assertThat(found.getFirst()).isEqualTo(target.get(1));
+
+        List<Review> reviewsNotInResult = List.of(target.getFirst(), target.getLast());
+        assertThat(found.containsAll(reviewsNotInResult)).isFalse();
+
+        found = reviewsDbStorage.findAll(1L, 2).stream().toList();
+
+        assertThat(found).isNotNull();
+        assertThat(found.size()).isEqualTo(2);
+        assertThat(found.getFirst()).isEqualTo(target.get(1));
+        assertThat(found.get(1)).isEqualTo(target.get(0));
+
+        reviewsNotInResult = List.of(target.getLast());
+        assertThat(found.containsAll(reviewsNotInResult)).isFalse();
+    }
+
+    @Test
+    void testPutLike() {
+        Review review = Review.builder()
+                .content("test")
+                .isPositive(false)
+                .userId(1L)
+                .filmId(1L)
+                .build();
+
+        Review created = reviewsDbStorage.create(review);
+        Review liked = reviewsDbStorage.putLike(created.getReviewId(), 1L);
+
+        assertThat(liked).isNotNull();
+        assertThat(liked.getUseful()).isEqualTo(1);
+    }
+
+    @Test
+    void testPutDislike() {
+        Review review = Review.builder()
+                .content("test")
+                .isPositive(false)
+                .userId(1L)
+                .filmId(1L)
+                .build();
+
+        Review created = reviewsDbStorage.create(review);
+        Review disliked = reviewsDbStorage.putDislike(created.getReviewId(), 1L);
+
+        assertThat(disliked).isNotNull();
+        assertThat(disliked.getUseful()).isEqualTo(-1);
+    }
+
+    @Test
+    void testDeleteLike() {
+        Review review = Review.builder()
+                .content("test")
+                .isPositive(false)
+                .userId(1L)
+                .filmId(1L)
+                .build();
+
+        Review created = reviewsDbStorage.create(review);
+
+        reviewsDbStorage.putLike(created.getReviewId(), 1L);
+        boolean res = reviewsDbStorage.deleteLike(created.getReviewId(), 1L);
+
+        assertThat(res).isTrue();
+
+        Review found = reviewsDbStorage.findById(created.getReviewId()).orElse(null);
+        Assertions.assertNotNull(found);
+        assertThat(found.getUseful()).isEqualTo(0);
+    }
+
+    @Test
+    void deleteDislike() {
+        Review review = Review.builder()
+                .content("test")
+                .isPositive(false)
+                .userId(1L)
+                .filmId(1L)
+                .build();
+
+        Review created = reviewsDbStorage.create(review);
+
+        reviewsDbStorage.putDislike(created.getReviewId(), 1L);
+        boolean res = reviewsDbStorage.deleteDislike(created.getReviewId(), 1L);
+
+        assertThat(res).isTrue();
+
+        Review found = reviewsDbStorage.findById(created.getReviewId()).orElse(null);
+        Assertions.assertNotNull(found);
+        assertThat(found.getUseful()).isEqualTo(0);
+    }
+
+    @Test
+    void testDeleteReviewByFilmConnection() {
+        Review review = Review.builder()
+                .content("test")
+                .isPositive(false)
+                .userId(1L)
+                .filmId(1L)
+                .build();
+
+        Review created = reviewsDbStorage.create(review);
+        reviewsDbStorage.deleteReviewByFilmConnection(1L);
+
+        Optional<Review> found = reviewsDbStorage.findById(created.getReviewId());
+
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    void testDeleteReviewByUserConnection() {
+        Review review = Review.builder()
+                .content("test")
+                .isPositive(false)
+                .userId(1L)
+                .filmId(1L)
+                .build();
+
+        Review created = reviewsDbStorage.create(review);
+        reviewsDbStorage.deleteReviewByUserConnection(1L);
+
+        Optional<Review> found = reviewsDbStorage.findById(created.getReviewId());
+
+        assertThat(found).isEmpty();
     }
 }

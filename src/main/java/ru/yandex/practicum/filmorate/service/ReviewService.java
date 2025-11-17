@@ -10,7 +10,7 @@ import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 
 import java.util.Collection;
 
-import static ru.yandex.practicum.filmorate.storage.review.ReviwValidator.*;
+import static ru.yandex.practicum.filmorate.storage.review.ReviewValidator.*;
 
 
 @Service
