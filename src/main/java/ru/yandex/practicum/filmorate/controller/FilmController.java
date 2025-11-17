@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -67,7 +68,7 @@ public class FilmController {
         return filmService.deleteLike(id, userId);
     }
 
-    @GetMapping("/popular")
+    @GetMapping("/popular/most")
     public List<Film> findMostPopularFilms(@RequestParam Optional<Integer> count) {
         log.info("Running GET method find most Popular films");
 
@@ -75,5 +76,12 @@ public class FilmController {
         log.trace("Default most popular films count = {}", DEFAULT_COUNT);
 
         return filmService.findMostPopularFilms(count.orElse(DEFAULT_COUNT));
+    }
+
+    @GetMapping("/popular")
+    public ResponseEntity<List<Film>> getPopularFilms(@RequestParam(defaultValue = "10") int count,
+                                                      @RequestParam(required = false) Integer genreId,
+                                                      @RequestParam(required = false) Integer year) {
+        return ResponseEntity.ok(filmService.getMostPopularFilms(count, genreId, year));
     }
 }

@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
+import java.util.List;
 
 @Repository
 @Qualifier("filmDbStorage")
@@ -80,6 +81,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public boolean containsFilm(Long id) {
         return findOne(FIND_BY_ID_QUERY, id).isPresent();
+    }
+
+    @Override
+    public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
+        return List.of();
     }
 
     private void updGenres(Film film) {
