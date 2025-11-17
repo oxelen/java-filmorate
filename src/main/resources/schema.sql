@@ -42,3 +42,15 @@ CREATE TABLE IF NOT EXISTS film_genres (
     film_id BIGINT REFERENCES films,
     genre_id BIGINT REFERENCES genres
 );
+
+CREATE TABLE IF NOT EXISTS events (
+                        event_id     BIGSERIAL PRIMARY KEY,
+                        timestamp    BIGINT NOT NULL,
+                        user_id      BIGINT REFERENCES users(id),
+                        event_type   VARCHAR(10) NOT NULL,
+                        operation    VARCHAR(10) NOT NULL,
+                        entity_id    BIGINT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_events_user_timestamp
+    ON events(user_id, timestamp DESC);
