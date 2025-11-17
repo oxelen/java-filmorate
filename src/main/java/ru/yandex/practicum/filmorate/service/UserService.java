@@ -3,9 +3,12 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
 import ru.yandex.practicum.filmorate.storage.dal.FriendsRepository;
+import ru.yandex.practicum.filmorate.storage.dal.LikesRepository;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserValidator;
 
@@ -19,10 +22,14 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserStorage userStorage;
     private final FriendsRepository friendsRepository;
+    private final LikesRepository likesRepository;
 
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, FriendsRepository friendsRepository) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage,
+                       FriendsRepository friendsRepository,
+                       LikesRepository likesRepository) {
         this.userStorage = userStorage;
         this.friendsRepository = friendsRepository;
+        this.likesRepository = likesRepository;
     }
 
     public User create(User user) {
@@ -40,22 +47,21 @@ public class UserService {
     }
 
     public User findById(Long id) {
-        return userStorage.findById(id).orElseThrow(() -> new NotFoundException("Пользователь не нашелся"));
+        return userStorage.findById(id).orElseThrow(
+                () -> new NotFoundException("Пользователь с id = " + id + " не найден"));
     }
 
     public Map<String, Long> addFriend(Long firstId, Long secondId) {
         log.debug("Starting addFriend, firstId = {}, secondId = {}", firstId, secondId);
-        if (!userStorage.containsUser(firstId)) {
-            throw new NotFoundException("Пользователь с id = " + firstId + " не найден.");
-        }
-        if (!userStorage.containsUser(secondId)) {
-            throw new NotFoundException("Пользователь с id = " + secondId + " не найден");
-        }
 
-        addUserToFriendList(firstId, secondId);
-        log.trace("secondId added to friends of firstId");
+        User user = findById(firstId);
+        User friend = findById(secondId);
 
-        friendsRepository.create(firstId, secondId);
+        addUserToFriendList(user.getId(), friend.getId());
+
+
+        friendsRepository.create(user.getId(), friend.getId());
+        log.info("User with id: {} has been added to friends of user with id: {}", friend.getId(), user.getId());
 
         return Map.of("firstId", firstId, "secondId", secondId);
     }
@@ -63,17 +69,14 @@ public class UserService {
     public Map<String, Long> deleteFriend(Long firstId, Long secondId) {
         log.debug("Starting deleteFriend, firstId = {}, secondId = {}", firstId, secondId);
 
-        if (!userStorage.containsUser(firstId)) {
-            throw new NotFoundException("Пользователь с id = " + firstId + " не найден.");
-        }
-        if (!userStorage.containsUser(secondId)) {
-            throw new NotFoundException("Пользователь с id = " + secondId + " не найден");
-        }
+        User user = findById(firstId);
+        User friendToRemove = findById(secondId);
 
-        deleteFromFriendList(firstId, secondId);
-        log.trace("secondId removed from firstId friends");
+        deleteFromFriendList(user.getId(), friendToRemove.getId());
 
-        friendsRepository.delete(firstId, secondId);
+        friendsRepository.delete(user.getId(), friendToRemove.getId());
+        log.info("User with id: {} has been removed from friends of user with id: {}",
+                friendToRemove.getId(), user.getId());
 
         return Map.of("firstId", firstId, "secondId", secondId);
     }
@@ -101,8 +104,8 @@ public class UserService {
             log.warn("User with id = {} is already friend of User with id = {}", addedUserId, userId);
             throw new DuplicatedDataException("Пользователи с id = " + userId + ", " + addedUserId + " уже друзья");
         }
-        log.trace("User with id = {} added to friend list of User with id = {}", addedUserId, userId);
         friends.add(addedUserId);
+        log.info("User with id = {} added to friend list of User with id = {}", addedUserId, userId);
     }
 
     private void deleteFromFriendList(Long userId, Long deletedUserId) {
@@ -115,11 +118,33 @@ public class UserService {
         }
 
         if (friends.contains(deletedUserId)) {
-            log.trace("User with id = {} deleted from list of User with id = {}", deletedUserId, userId);
+            log.info("User with id = {} deleted from list of User with id = {}", deletedUserId, userId);
             friends.remove(deletedUserId);
         } else {
             log.warn("User with id = {} not friend of User with id = {}", deletedUserId, userId);
             throw new ConditionsNotMetException("Пользователи с id = " + userId + ", " + deletedUserId + " не друзья");
         }
+    }
+
+    @Transactional
+    public void deleteUserById(Long userId) {
+        log.debug("Starting deleteUserById, userId = {}", userId);
+        User user = findById(userId);
+
+        ServiceUtils.safeDelete(() -> friendsRepository.deleteAllByUserId(user.getId()),
+                "Failed to delete friend relations for user with id = ", userId);
+        log.debug("Deleted friend relations for userId = {}", userId);
+
+        ServiceUtils.safeDelete(() -> likesRepository.deleteAllByUserId(user.getId()),
+                "Failed to delete likes for user with id = ", userId);
+        log.debug("Deleted likes for userId = {}", userId);
+
+
+        if (!userStorage.deleteById(user.getId())) {
+            log.error("Failed to remove user with id = {}", userId);
+            throw new InternalServerException("Не удалось удалить пользователя с id = " + userId);
+        }
+
+        log.info("User with id = {} has been successfully deleted", userId);
     }
 }

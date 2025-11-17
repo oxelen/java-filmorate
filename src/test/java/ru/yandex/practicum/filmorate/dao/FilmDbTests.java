@@ -119,4 +119,24 @@ public class FilmDbTests {
         assertThat(filmStorage.containsFilm(film.getId())).isTrue();
         assertThat(filmStorage.containsFilm(9999L)).isFalse();
     }
+
+    @Test
+    void testDeleteFilm() {
+        Film film = filmStorage.create(Film.builder()
+                .name("TestFilm")
+                .description("TestDescription")
+                .releaseDate(LocalDate.of(2010, 10, 10))
+                .duration(100L)
+                .mpa(MPA.builder().id(1L).name("G").build())
+                .build());
+
+        boolean exists = filmStorage.containsFilm(film.getId());
+        assertThat(exists).isTrue();
+
+        boolean deleted = filmStorage.deleteById(film.getId());
+        assertThat(deleted).isTrue();
+
+        boolean notExists = filmStorage.deleteById(film.getId());
+        assertThat(notExists).isFalse();
+    }
 }

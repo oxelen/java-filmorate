@@ -3,10 +3,15 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
+import ru.yandex.practicum.filmorate.storage.dal.GenresRepository;
 import ru.yandex.practicum.filmorate.storage.dal.LikesRepository;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmValidator;
@@ -25,13 +30,16 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final LikesRepository likesRepository;
+    private final GenresRepository genresRepository;
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
-                       LikesRepository likesRepository) {
+                       LikesRepository likesRepository,
+                       GenresRepository genresRepository) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.likesRepository = likesRepository;
+        this.genresRepository = genresRepository;
     }
 
     public Film create(Film film) {
@@ -51,26 +59,28 @@ public class FilmService {
     }
 
     public Film findById(Long id) {
-        return filmStorage.findById(id);
+        return filmStorage.findById(id).orElseThrow(
+                () -> new NotFoundException("Фильм с id = " + id + " не найден"));
     }
 
     public Map<String, Long> likeFilm(Long filmId, Long userId) {
         log.debug("Starting likeFilm. film id = {}, userId = {}", filmId, userId);
 
+        Film film = findById(filmId);
         if (!userStorage.containsUser(userId))
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
 
-        Set<Long> likes = findById(filmId).getLikes();
+        Set<Long> likes = findById(film.getId()).getLikes();
         if (likes.contains(userId)) {
             log.warn("User (id = {}) already likes film (id = {})", userId, filmId);
             throw new DuplicatedDataException("Пользователь с id = " + userId + " уже лайкнул фильм с id = " + filmId);
         }
 
         likes.add(userId);
-        log.trace("User (id = {}) like film (id ={})", userId, filmId);
+
 
         likesRepository.create(filmId, userId);
-
+        log.info("User (id = {}) liked film (id ={})", userId, filmId);
         return Map.of("film Id", filmId,
                 "userId", userId);
     }
@@ -78,10 +88,11 @@ public class FilmService {
     public Map<String, Long> deleteLike(Long filmId, Long userId) {
         log.debug("Starting deleteLike, filmId = {}, userId = {}", filmId, userId);
 
+        Film film = findById(filmId);
         if (!userStorage.containsUser(userId))
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
 
-        Set<Long> likes = findById(filmId).getLikes();
+        Set<Long> likes = findById(film.getId()).getLikes();
         if (!likes.contains(userId)) {
             log.warn("Likes of film (id = {}) does not contains like from user (id = {})", filmId, userId);
             throw new ConditionsNotMetException("В списке лайков фильма с id = " + filmId
@@ -104,5 +115,26 @@ public class FilmService {
                 .sorted((o1, o2) -> (o2.getLikes().size() - o1.getLikes().size()))
                 .limit(count)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteFilmById(Long filmId) {
+        log.debug("Starting deleteFilmById, filmId = {}", filmId);
+        Film film = findById(filmId);
+
+        ServiceUtils.safeDelete(() -> likesRepository.deleteAllByFilmId(film.getId()),
+                "Failed to delete likes for film with id = ", filmId);
+        log.debug("Deleted likes for film with id = {}", filmId);
+
+        ServiceUtils.safeDelete(() -> genresRepository.deleteFilmGenresByFilmId(film.getId()),
+                "Failed to delete genres for film with id = ", filmId);
+        log.debug("Deleted genres for film with id = {}", filmId);
+
+        if (!filmStorage.deleteById(film.getId())) {
+            log.error("Failed to remove film with id = {}", filmId);
+            throw new InternalServerException("Не удалось удалить фильм с id = " + filmId);
+        }
+
+        log.info("Film with id = {} has been successfully deleted", filmId);
     }
 }

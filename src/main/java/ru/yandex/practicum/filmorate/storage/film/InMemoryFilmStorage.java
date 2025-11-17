@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.storage.film.FilmValidator.*;
 
@@ -65,13 +66,13 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film findById(Long id) {
+    public Optional<Film> findById(Long id) {
         log.debug("Starting findById, id = {}", id);
 
         if (!containsFilm(id))
             throw new NotFoundException("Фильм с id = " + id + " не найден");
 
-        return films.get(id);
+        return Optional.of(films.get(id));
     }
 
     @Override
@@ -83,6 +84,12 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
         log.warn("Not found film, id = {}", id);
         return false;
+    }
+
+    @Override
+    public boolean deleteById(Long id) {
+        log.debug("Starting deleteById, id = {}", id);
+        return films.remove(id) != null;
     }
 
     private void updateFilmFields(Film oldFilm, Film newFilm) {

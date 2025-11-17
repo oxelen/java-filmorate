@@ -113,4 +113,23 @@ public class UserDbTests {
         assertThat(exists).isTrue();
         assertThat(notExists).isFalse();
     }
+
+    @Test
+    void testDeleteUser() {
+        User user = userStorage.create(User.builder()
+                .email("delete@test.ru")
+                .login("deleteLogin")
+                .name("Delete User")
+                .birthday(LocalDate.of(1990, 1, 1))
+                .build());
+
+        boolean exists = userStorage.containsUser(user.getId());
+        assertThat(exists).isTrue();
+
+        boolean deleted = userStorage.deleteById(user.getId());
+        assertThat(deleted).isTrue();
+
+        boolean notExists = userStorage.containsUser(user.getId());
+        assertThat(notExists).isFalse();
+    }
 }

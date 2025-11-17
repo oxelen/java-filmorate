@@ -12,6 +12,8 @@ public class LikesRepository extends BaseDbStorage<Long> {
     private static final String ALL_LIKES_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
     private static final String INSERT_QUERY = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_QUERY = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
+    private static final String DELETE_ALL_BY_USER_ID_QUERY = "DELETE FROM likes WHERE user_id = ?";
+    private static final String DELETE_ALL_BY_FILM_ID_QUERY = "DELETE FROM likes WHERE film_id = ?";
 
     public LikesRepository(JdbcTemplate jdbc,
                            @Qualifier("likesRowMapper") RowMapper<Long> mapper) {
@@ -28,5 +30,13 @@ public class LikesRepository extends BaseDbStorage<Long> {
 
     public void delete(Long filmId, Long userId) {
         delete(DELETE_QUERY, filmId, userId);
+    }
+
+    public boolean deleteAllByUserId(Long userId) {
+        return delete(DELETE_ALL_BY_USER_ID_QUERY, userId);
+    }
+
+    public boolean deleteAllByFilmId(Long filmId) {
+        return delete(DELETE_ALL_BY_FILM_ID_QUERY, filmId);
     }
 }
