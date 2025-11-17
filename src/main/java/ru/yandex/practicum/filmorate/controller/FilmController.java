@@ -68,20 +68,15 @@ public class FilmController {
         return filmService.deleteLike(id, userId);
     }
 
-    @GetMapping("/popular/most")
-    public List<Film> findMostPopularFilms(@RequestParam Optional<Integer> count) {
-        log.info("Running GET method find most Popular films");
-
-        final int DEFAULT_COUNT = 10;
-        log.trace("Default most popular films count = {}", DEFAULT_COUNT);
-
-        return filmService.findMostPopularFilms(count.orElse(DEFAULT_COUNT));
-    }
-
     @GetMapping("/popular")
-    public ResponseEntity<List<Film>> getPopularFilms(@RequestParam(defaultValue = "10") int count,
-                                                      @RequestParam(required = false) Integer genreId,
-                                                      @RequestParam(required = false) Integer year) {
-        return ResponseEntity.ok(filmService.getMostPopularFilms(count, genreId, year));
+    public List<Film> getPopularFilms(
+            @RequestParam(defaultValue = "10") int count,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Integer year) {
+
+        log.info("Running GET method find most Popular films");
+        log.trace("Parameters: count={}, genreId={}, year={}", count, genreId, year);
+
+        return filmService.getMostPopularFilms(count, genreId, year);
     }
 }

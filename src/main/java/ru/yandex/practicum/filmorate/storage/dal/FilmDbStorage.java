@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.dal.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -91,31 +92,47 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
+
         String sql = """
-                    SELECT
-                        f.id,
-                        f.name,
-                        f.description,
-                        f.release_date,
-                        f.duration,
-                        f.MPA_id,
-                        COUNT(l.user_id) AS likes_count
-                    FROM films f
-                    JOIN likes l ON f.id = l.film_id
-                    JOIN film_genres fg ON f.id = fg.film_id
-                    JOIN genres g ON fg.genre_id = g.id
-                    JOIN MPAs m ON f.MPA_id = m.id
-                    WHERE g.id = :genreId
-                      AND EXTRACT(YEAR FROM f.release_date) = :year
-                    GROUP BY f.id, f.name, f.description, f.release_date, f.duration, f.MPA_id
-                    ORDER BY likes_count DESC
-                    LIMIT :count
+                SELECT
+                f.id,
+                f.name,
+                f.description,
+                f.release_date,
+                f.duration,
+                f.MPA_id,
+                COUNT(l.user_id) AS likes_count
+                FROM films f
+                JOIN likes l ON f.id = l.film_id
+                JOIN film_genres fg ON f.id = fg.film_id
+                JOIN genres g ON fg.genre_id = g.id
+                JOIN MPAs m ON f.MPA_id = m.id
                 """;
 
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("genreId", genreId)
-                .addValue("year", year)
-                .addValue("count", count);
+        List<String> conditions = new ArrayList<>();
+        MapSqlParameterSource params = new MapSqlParameterSource();
+
+
+        if (genreId != null) {
+            conditions.add("g.id = :genreId");
+            params.addValue("genreId", genreId);
+        }
+        if (year != null) {
+            conditions.add("EXTRACT(YEAR FROM f.release_date) = :year  ");
+            params.addValue("year", year);
+        }
+
+        if (!conditions.isEmpty()) {
+            sql += " WHERE " + String.join(" AND ", conditions);
+        }
+
+        sql += " GROUP BY f.id, f.name, f.description, f.release_date, f.duration, f.MPA_id " +
+                "ORDER BY likes_count DESC " +
+                "LIMIT :count";
+        params.addValue("count", count);
+
+        System.out.println("Final SQL: " + sql);
+        System.out.println("Params: " + params.getValues());
 
         return namedParameterJdbcTemplate.query(sql, params, filmRowMapper);  // Теперь работает!
     }

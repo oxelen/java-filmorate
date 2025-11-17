@@ -64,4 +64,12 @@
 -- LIMIT :count;
 --
 --
+
+-- DROP table LIKES;
+-- DROP table FILM_GENRES;
+-- DROP table GENRES;
+-- DROP table FILMS;
+-- DROP table MPAS;
+-- DROP table FRIENDS;
+-- DROP table USERS;
 --
