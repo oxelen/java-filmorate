@@ -18,18 +18,18 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final MPAsRepository mpasRepository;
 
     private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, MPA_id)" +
-            "VALUES (?, ?, ?, ?, ?)";
+                                               "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE films " +
-            "SET name = ?, " +
-            "description = ?, " +
-            "release_date = ?, " +
-            "duration = ?, " +
-            "MPA_id = ? " +
-            "WHERE id = ?";
+                                               "SET name = ?, " +
+                                               "description = ?, " +
+                                               "release_date = ?, " +
+                                               "duration = ?, " +
+                                               "MPA_id = ? " +
+                                               "WHERE id = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM films";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) " +
-            "VALUES (?, ?)";
+                                                          "VALUES (?, ?)";
     private static final String FIND_FILMS_BY_DIRECTOR_BY_YEAR = """
             SELECT f.*
             FROM films f

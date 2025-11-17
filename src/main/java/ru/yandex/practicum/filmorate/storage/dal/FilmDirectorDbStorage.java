@@ -14,24 +14,18 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class FilmDirectorDbStorage implements FilmDirectorStorage {
-
-    private final JdbcTemplate jdbc;
-    private final DirectorRowMapper mapper;
-
-    private static final String INSERT =
-            "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
-
-    private static final String DELETE_ALL =
-            "DELETE FROM film_directors WHERE film_id = ?";
-
+    private static final String INSERT = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
+    private static final String DELETE_ALL = "DELETE FROM film_directors WHERE film_id = ?";
     private static final String SELECT_BY_FILM =
             "SELECT d.id, d.name " +
             "FROM directors d " +
             "JOIN film_directors fd ON d.id = fd.director_id " +
             "WHERE fd.film_id = ?";
-
     private static final String SELECT_FILMS_BY_DIRECTOR =
             "SELECT film_id FROM film_directors WHERE director_id = ?";
+
+    private final JdbcTemplate jdbc;
+    private final DirectorRowMapper mapper;
 
     @Override
     public void addDirectorsToFilm(long filmId, List<Director> directors) {
