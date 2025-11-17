@@ -105,4 +105,7 @@ public class FilmService {
                 .limit(count)
                 .collect(Collectors.toList());
     }
+    public List<Film> getRecommendationFilms(Long userId) {
+        return filmStorage.getRecommendationFilms(userId);
+    }
 }
