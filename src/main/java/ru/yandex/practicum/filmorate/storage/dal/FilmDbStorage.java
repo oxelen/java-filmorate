@@ -47,6 +47,37 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             ORDER BY likes_count DESC;
             """;
 
+    private static final String FIND_BY_TITLE = """
+            SELECT f.*, COUNT(l.user_id) AS likes_count
+            FROM films f
+            LEFT JOIN likes l ON f.id = l.film_id
+            WHERE LOWER(f.name) LIKE LOWER(?)
+            GROUP BY f.id
+            ORDER BY likes_count DESC
+            """;
+
+    private static final String FIND_BY_DIRECTOR = """
+            SELECT f.*, COUNT(l.user_id) AS likes_count
+            FROM films f
+            JOIN film_directors fd ON f.id = fd.film_id
+            JOIN directors d ON fd.director_id = d.id
+            LEFT JOIN likes l ON f.id = l.film_id
+            WHERE LOWER(d.name) LIKE LOWER(?)
+            GROUP BY f.id
+            ORDER BY likes_count DESC
+            """;
+
+    private static final String FIND_BY_TITLE_OR_DIRECTOR = """
+            SELECT f.*, COUNT(l.user_id) AS likes_count
+            FROM films f
+            LEFT JOIN film_directors fd ON f.id = fd.film_id
+            LEFT JOIN directors d ON fd.director_id = d.id
+            LEFT JOIN likes l ON f.id = l.film_id
+            WHERE LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)
+            GROUP BY f.id
+            ORDER BY likes_count DESC
+            """;
+
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, MPAsRepository mpasRepository) {
         super(jdbc, mapper);
         this.mpasRepository = mpasRepository;
@@ -111,5 +142,20 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     public List<Film> getFilmsByDirectorSortedByLikes(Long directorId) {
         return jdbc.query(FIND_FILMS_BY_DIRECTOR_BY_LIKES, mapper, directorId);
+    }
+
+    public List<Film> findByTitle(String query) {
+        String pattern = "%" + query + "%";
+        return jdbc.query(FIND_BY_TITLE, mapper, pattern);
+    }
+
+    public List<Film> findByDirector(String query) {
+        String pattern = "%" + query + "%";
+        return jdbc.query(FIND_BY_DIRECTOR, mapper, pattern);
+    }
+
+    public List<Film> findByTitleOrDirector(String query) {
+        String pattern = "%" + query + "%";
+        return jdbc.query(FIND_BY_TITLE_OR_DIRECTOR, mapper, pattern, pattern);
     }
 }

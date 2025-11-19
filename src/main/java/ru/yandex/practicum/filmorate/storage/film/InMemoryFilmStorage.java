@@ -96,6 +96,21 @@ public class InMemoryFilmStorage implements FilmStorage {
         throw new RuntimeException("Метод не реализован");
     }
 
+    @Override
+    public List<Film> findByTitle(String query) {
+        throw new RuntimeException("Метод не реализован");
+    }
+
+    @Override
+    public List<Film> findByDirector(String query) {
+        throw new RuntimeException("Метод не реализован");
+    }
+
+    @Override
+    public List<Film> findByTitleOrDirector(String query) {
+        throw new RuntimeException("Метод не реализован");
+    }
+
     private void updateFilmFields(Film oldFilm, Film newFilm) {
         log.debug("Starting update Film fields, id = {}", newFilm.getId());
         if (newFilm.getName() != null) {
