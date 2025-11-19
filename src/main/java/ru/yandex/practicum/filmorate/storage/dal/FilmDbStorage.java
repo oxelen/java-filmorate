@@ -172,7 +172,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 WHERE f.id IN (SELECT film_id FROM similar_user_liked)
                   AND f.id NOT IN (SELECT film_id FROM user_already_liked)
                 ORDER BY f.release_date DESC;
-                
                 """;
 
         MapSqlParameterSource recommendationParams = new MapSqlParameterSource()
