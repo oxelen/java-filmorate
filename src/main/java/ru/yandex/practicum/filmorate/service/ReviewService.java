@@ -3,29 +3,41 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
 
-import static ru.yandex.practicum.filmorate.storage.review.ReviewValidator.*;
+import static ru.yandex.practicum.filmorate.storage.review.ReviewValidator.validateReview;
 
 
 @Service
 @Slf4j
 public class ReviewService {
     private final ReviewStorage reviewsStorage;
+    private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
 
-    public ReviewService(@Qualifier("reviewsDbStorage") ReviewStorage reviewsStorage) {
+    public ReviewService(@Qualifier("reviewsDbStorage") ReviewStorage reviewsStorage,
+                         @Qualifier("userDbStorage") UserStorage userStorage,
+                         @Qualifier("filmDbStorage") FilmStorage filmStorage) {
         this.reviewsStorage = reviewsStorage;
+        this.userStorage = userStorage;
+        this.filmStorage = filmStorage;
     }
 
     public Review create(Review review) {
         log.trace("Start create in reviewService");
 
         validateReview(review);
+
+        checkUserAndFilmId(review.getUserId(), review.getFilmId());
         return reviewsStorage.create(review);
     }
 
@@ -38,11 +50,16 @@ public class ReviewService {
         }
         validateReview(newReview);
 
+        checkReviewId(newReview.getReviewId());
+        checkUserAndFilmId(newReview.getUserId(), newReview.getFilmId());
+
         return reviewsStorage.update(newReview);
     }
 
     public boolean delete(Long id) {
         log.trace("Start delete in reviewService");
+
+        checkReviewId(id);
 
         return reviewsStorage.deleteById(id);
     }
@@ -63,23 +80,80 @@ public class ReviewService {
     public Collection<Review> findAll(Long filmId, Integer count) {
         log.trace("Start findAll in reviewService. filmId = {}, count = {}", filmId, count);
 
+        checkFilmId(filmId);
+
         return reviewsStorage.findAll(filmId, count);
     }
 
     public Review putLike(Long id, Long userId) {
         log.trace("Start putLike in reviewService");
 
-        return reviewsStorage.putLike(id, userId);
+        Review res = findById(id);
+        checkUserId(userId);
+
+        if (reviewsStorage.isUserLikeReview(id, userId)) {
+            log.warn("userId = {} already like reviewId = {}", userId, id);
+
+            throw new DuplicatedDataException("Пользователь с id = " + userId
+                    + " уже поставил лайк отзыву с id = " + id);
+        }
+
+        if (reviewsStorage.isUserDislikeReview(id, userId)) {
+            log.debug("userId = {} dislike reviewId = {}. Deleting dislike", userId, id);
+
+            deleteDislike(id, userId);
+            res.setUseful(res.getUseful() + 1);
+        }
+
+        res.setUseful(res.getUseful() + 1);
+        update(res);
+        reviewsStorage.putLike(id, userId);
+
+        return res;
     }
 
     public Review putDislike(Long id, Long userId) {
         log.trace("Start putDislike in reviewService");
 
-        return reviewsStorage.putDislike(id, userId);
+        Review res = findById(id);
+        checkUserId(userId);
+
+        if (reviewsStorage.isUserDislikeReview(id, userId)) {
+            log.warn("userId = {} already dislike reviewId = {}", userId, id);
+
+            throw new DuplicatedDataException("Пользователь с id = " + userId
+                    + " уже поставил дизлайк отзыву с id = " + id);
+        }
+
+        if (reviewsStorage.isUserLikeReview(id, userId)) {
+            log.debug("userId = {} like reviewId = {}. Deleting like", userId, id);
+
+            deleteLike(id, userId);
+            res.setUseful(res.getUseful() - 1);
+        }
+
+        res.setUseful(res.getUseful() - 1);
+        update(res);
+        reviewsStorage.putDislike(id, userId);
+
+        return res;
     }
 
     public boolean deleteLike(Long id, Long userId) {
         log.trace("Start deleteLike in reviewService");
+
+        Review res = findById(id);
+        checkUserId(userId);
+
+        if (!reviewsStorage.isUserLikeReview(id, userId)) {
+            log.warn("userId = {} not like reviewId = {}", userId, id);
+
+            throw new ConditionsNotMetException("Пользователь с id = " + userId
+                    + " не ставил лайк отзыву с id = " + id);
+        }
+
+        res.setUseful(res.getUseful() - 1);
+        update(res);
 
         return reviewsStorage.deleteLike(id, userId);
     }
@@ -87,6 +161,58 @@ public class ReviewService {
     public boolean deleteDislike(Long id, Long userId) {
         log.trace("Start deleteDislike in reviewService");
 
+        Review res = findById(id);
+        checkUserId(userId);
+
+        if (!reviewsStorage.isUserDislikeReview(id, userId)) {
+            log.warn("userId = {} not dislike reviewId = {}", userId, id);
+
+            throw new ConditionsNotMetException("Пользователь с id = " + userId
+                    + " не ставил дизлайк отзыву с id = " + id);
+        }
+
+        res.setUseful(res.getUseful() + 1);
+        update(res);
+
         return reviewsStorage.deleteDislike(id, userId);
+    }
+
+    private void checkUserAndFilmId(Long userId, Long filmId) {
+        log.debug("Start check id:  userId = {}, filmId = {}", userId, filmId);
+
+        checkUserId(userId);
+        checkFilmId(filmId);
+
+        log.trace("found user and film");
+    }
+
+    private void checkFilmId(Long filmId) {
+        log.trace("Start check filmId");
+
+        if (!filmStorage.containsFilm(filmId)) {
+            log.warn("Not found film. id = {}", filmId);
+            throw new NotFoundException("Фильм с id = " + filmId + " не найден.");
+        }
+
+        log.trace("found film");
+    }
+
+    private void checkUserId(Long userId) {
+        log.trace("Start check userId");
+
+        if (!userStorage.containsUser(userId)) {
+            log.warn("Not found user. id = {}", userId);
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден.");
+        }
+
+        log.trace("found user");
+    }
+
+    private void checkReviewId(Long reviewId) {
+        log.trace("Start check reviewId");
+
+        if (!reviewsStorage.containsReview(reviewId)) {
+            throw new NotFoundException("Отзыв с id = " + reviewId + " не найден");
+        }
     }
 }

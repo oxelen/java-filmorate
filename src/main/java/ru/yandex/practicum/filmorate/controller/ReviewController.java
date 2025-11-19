@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
 import java.util.Collection;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/reviews")
@@ -47,15 +46,11 @@ public class ReviewController {
     }
 
     @GetMapping
-    public Collection<Review> findAll(@RequestParam("filmId") Optional<Long> optionalFilmId,
-                                      @RequestParam("count") Optional<Integer> optionalCount) {
+    public Collection<Review> findAll(@RequestParam Long filmId,
+                                      @RequestParam(defaultValue = "10") Integer count) {
         log.info("Starting GET METHOD find all reviews");
-        final Integer DEFAULT_COUNT = 10;
-        log.debug("default count = {}", DEFAULT_COUNT);
 
-        if (optionalFilmId.isPresent()) {
-            Integer count = optionalCount.orElse(DEFAULT_COUNT);
-            Long filmId = optionalFilmId.get();
+        if (filmId != null) {
             log.debug("filmId = {}. Starting find reviews of this film. Count = {}", filmId, count);
 
             PathVariableValidator.checkIds(filmId);

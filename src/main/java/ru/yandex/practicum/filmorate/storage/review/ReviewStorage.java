@@ -6,27 +6,33 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface ReviewStorage {
-    public Review create(Review review);
+    Review create(Review review);
 
-    public Review update(Review newReview);
+    Review update(Review newReview);
 
-    public boolean deleteById(Long id);
+    boolean deleteById(Long id);
 
-    public Optional<Review> findById(Long id);
+    Optional<Review> findById(Long id);
 
-    public Collection<Review> findAll();
+    Collection<Review> findAll();
 
-    public Collection<Review> findAll(Long filmId, Integer count);
+    Collection<Review> findAll(Long filmId, Integer count);
 
-    public Review putLike(Long id, Long userId);
+    void putLike(Long id, Long userId);
 
-    public Review putDislike(Long id, Long userId);
+    void putDislike(Long id, Long userId);
 
-    public boolean deleteLike(Long id, Long userId);
+    boolean deleteLike(Long id, Long userId);
 
-    public boolean deleteDislike(Long id, Long userId);
+    boolean deleteDislike(Long id, Long userId);
 
-    public void deleteReviewByFilmConnection(Long filmId);
+    void deleteReviewByFilmConnection(Long filmId);
 
-    public void deleteReviewByUserConnection(Long userId);
+    void deleteReviewByUserConnection(Long userId);
+
+    boolean containsReview(Long reviewId);
+
+    boolean isUserLikeReview(Long id, Long userId);
+
+    boolean isUserDislikeReview(Long id, Long userId);
 }

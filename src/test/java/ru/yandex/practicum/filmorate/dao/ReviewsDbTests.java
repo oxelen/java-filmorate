@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.Review;
@@ -239,80 +240,6 @@ public class ReviewsDbTests {
 
         reviewsNotInResult = List.of(target.getLast());
         assertThat(found.containsAll(reviewsNotInResult)).isFalse();
-    }
-
-    @Test
-    void testPutLike() {
-        Review review = Review.builder()
-                .content("test")
-                .isPositive(false)
-                .userId(1L)
-                .filmId(1L)
-                .build();
-
-        Review created = reviewsDbStorage.create(review);
-        Review liked = reviewsDbStorage.putLike(created.getReviewId(), 1L);
-
-        assertThat(liked).isNotNull();
-        assertThat(liked.getUseful()).isEqualTo(1);
-    }
-
-    @Test
-    void testPutDislike() {
-        Review review = Review.builder()
-                .content("test")
-                .isPositive(false)
-                .userId(1L)
-                .filmId(1L)
-                .build();
-
-        Review created = reviewsDbStorage.create(review);
-        Review disliked = reviewsDbStorage.putDislike(created.getReviewId(), 1L);
-
-        assertThat(disliked).isNotNull();
-        assertThat(disliked.getUseful()).isEqualTo(-1);
-    }
-
-    @Test
-    void testDeleteLike() {
-        Review review = Review.builder()
-                .content("test")
-                .isPositive(false)
-                .userId(1L)
-                .filmId(1L)
-                .build();
-
-        Review created = reviewsDbStorage.create(review);
-
-        reviewsDbStorage.putLike(created.getReviewId(), 1L);
-        boolean res = reviewsDbStorage.deleteLike(created.getReviewId(), 1L);
-
-        assertThat(res).isTrue();
-
-        Review found = reviewsDbStorage.findById(created.getReviewId()).orElse(null);
-        Assertions.assertNotNull(found);
-        assertThat(found.getUseful()).isEqualTo(0);
-    }
-
-    @Test
-    void deleteDislike() {
-        Review review = Review.builder()
-                .content("test")
-                .isPositive(false)
-                .userId(1L)
-                .filmId(1L)
-                .build();
-
-        Review created = reviewsDbStorage.create(review);
-
-        reviewsDbStorage.putDislike(created.getReviewId(), 1L);
-        boolean res = reviewsDbStorage.deleteDislike(created.getReviewId(), 1L);
-
-        assertThat(res).isTrue();
-
-        Review found = reviewsDbStorage.findById(created.getReviewId()).orElse(null);
-        Assertions.assertNotNull(found);
-        assertThat(found.getUseful()).isEqualTo(0);
     }
 
     @Test
