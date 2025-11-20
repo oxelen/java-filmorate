@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.dal.LikesRepository;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -20,16 +21,13 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final LikesRepository likesRepository;
-    private final UserService userService;
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
-                       LikesRepository likesRepository,
-                       UserService userService) {
+                       LikesRepository likesRepository) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.likesRepository = likesRepository;
-        this.userService = userService;
     }
 
     public Film create(Film film) {
@@ -55,7 +53,7 @@ public class FilmService {
     public Map<String, Long> likeFilm(Long filmId, Long userId) {
         log.debug("Starting likeFilm. film id = {}, userId = {}", filmId, userId);
 
-        userService.checkUserInStorage(userId);
+        checkUserInStorage(userId);
 
         Set<Long> likes = findById(filmId).getLikes();
         if (likes.contains(userId)) {
@@ -75,7 +73,7 @@ public class FilmService {
     public Map<String, Long> deleteLike(Long filmId, Long userId) {
         log.debug("Starting deleteLike, filmId = {}, userId = {}", filmId, userId);
 
-        userService.checkUserInStorage(userId);
+        checkUserInStorage(userId);
 
         Set<Long> likes = findById(filmId).getLikes();
         if (!likes.contains(userId)) {
@@ -103,10 +101,7 @@ public class FilmService {
     }
 
     public Collection<Film> getCommonFilms(Long userId, Long friendId) {
-        userService.checkUserInStorage(userId, friendId);
-     /*   if (!userService.isFriends(userId, friendId)) {
-            throw new NotFoundException("Пользователи не друзья");
-        }*/
+        checkUserInStorage(userId, friendId);
 
         return likesRepository.findAllLikedByUserId(userId)
                 .stream()
@@ -114,5 +109,14 @@ public class FilmService {
                 .map(this::findById)
                 .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
                 .toList();
+    }
+
+    private void checkUserInStorage(Long... userIds) {
+        for (Long userId : userIds) {
+            if (!userStorage.containsUser(userId)) {
+                log.warn("Not found user id = {}", userId);
+                throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+            }
+        }
     }
 }

@@ -93,15 +93,6 @@ public class UserService {
         return firstFriends.stream().filter(secondFriends::contains).map(this::findById).collect(Collectors.toList());
     }
 
-    public void checkUserInStorage(Long... userIds) {
-        for (Long userId : userIds) {
-            if (!userStorage.containsUser(userId)) {
-                log.warn("Not found user id = {}", userId);
-                throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-            }
-        }
-    }
-
     public boolean isFriends(Long firstId, Long secId) {
         Set<Long> firstQueries = findById(firstId).getFriends();
         Set<Long> secQueries = findById(secId).getFriends();
