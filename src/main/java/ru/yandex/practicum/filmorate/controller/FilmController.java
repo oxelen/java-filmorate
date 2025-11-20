@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -75,5 +76,14 @@ public class FilmController {
         log.trace("Default most popular films count = {}", DEFAULT_COUNT);
 
         return filmService.findMostPopularFilms(count.orElse(DEFAULT_COUNT));
+    }
+
+    @GetMapping("/common")
+    public Collection<Film> findCommonFilms(@RequestParam Long userId,
+                                            @RequestParam Long friendId) {
+        log.info("Running GET METHOD find common films");
+        checkIds(userId, friendId);
+
+        return filmService.getCommonFilms(userId, friendId);
     }
 }
