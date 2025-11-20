@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static ru.yandex.practicum.filmorate.storage.film.FilmValidator.*;
@@ -83,6 +84,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
         log.warn("Not found film, id = {}", id);
         return false;
+    }
+
+    @Override
+    public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
+        return List.of();
     }
 
     private void updateFilmFields(Film oldFilm, Film newFilm) {

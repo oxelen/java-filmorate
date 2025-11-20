@@ -105,4 +105,8 @@ public class FilmService {
                 .limit(count)
                 .collect(Collectors.toList());
     }
+
+    public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
+        return filmStorage.getMostPopularFilms(count, genreId, year);
+    }
 }
