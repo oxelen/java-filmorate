@@ -30,7 +30,7 @@ public class ReviewService {
     public ReviewService(@Qualifier("reviewsDbStorage") ReviewStorage reviewsStorage,
                          @Qualifier("userDbStorage") UserStorage userStorage,
                          @Qualifier("filmDbStorage") FilmStorage filmStorage,
-                        EventsRepository eventsRepository) {
+                         EventsRepository eventsRepository) {
         this.reviewsStorage = reviewsStorage;
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
@@ -80,7 +80,7 @@ public class ReviewService {
 
         boolean isDeleted = reviewsStorage.deleteById(id);
 
-        if(!isDeleted) {
+        if (!isDeleted) {
             log.error("Unexpected: review {} exists but was not deleted", id);
             throw new InternalServerException("Cannot delete review with id " + id);
         }
