@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.dal;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -12,8 +11,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import java.util.Collection;
 import java.util.List;
 
-@Repository
-@Qualifier("filmDbStorage")
+@Repository("filmDbStorage")
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final MPAsRepository mpasRepository;
 
