@@ -3,11 +3,13 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.*;
+import ru.yandex.practicum.filmorate.model.Event.Event;
+import ru.yandex.practicum.filmorate.model.Event.EventOperation;
+import ru.yandex.practicum.filmorate.model.Event.EventType;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
+import ru.yandex.practicum.filmorate.storage.dal.EventsRepository;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -23,13 +25,16 @@ public class ReviewService {
     private final ReviewStorage reviewsStorage;
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final EventsRepository eventsRepository;
 
     public ReviewService(@Qualifier("reviewsDbStorage") ReviewStorage reviewsStorage,
                          @Qualifier("userDbStorage") UserStorage userStorage,
-                         @Qualifier("filmDbStorage") FilmStorage filmStorage) {
+                         @Qualifier("filmDbStorage") FilmStorage filmStorage,
+                        EventsRepository eventsRepository) {
         this.reviewsStorage = reviewsStorage;
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
+        this.eventsRepository = eventsRepository;
     }
 
     public Review create(Review review) {
@@ -38,7 +43,13 @@ public class ReviewService {
         validateReview(review);
 
         checkUserAndFilmId(review.getUserId(), review.getFilmId());
-        return reviewsStorage.create(review);
+        Review createdReview = reviewsStorage.create(review);
+
+        Event event = ServiceUtils.createEvent(createdReview.getUserId(), EventType.REVIEW, EventOperation.ADD, createdReview.getReviewId());
+        eventsRepository.createEvent(event);
+        log.debug("Event created: {}", event);
+
+        return createdReview;
     }
 
     public Review update(Review newReview) {
@@ -53,15 +64,35 @@ public class ReviewService {
         checkReviewId(newReview.getReviewId());
         checkUserAndFilmId(newReview.getUserId(), newReview.getFilmId());
 
-        return reviewsStorage.update(newReview);
+        Review updatedReview = reviewsStorage.update(newReview);
+
+        Event event = ServiceUtils.createEvent(updatedReview.getUserId(), EventType.REVIEW, EventOperation.UPDATE, updatedReview.getReviewId());
+        eventsRepository.createEvent(event);
+        log.debug("Event created: {}", event);
+
+        return updatedReview;
     }
 
     public boolean delete(Long id) {
         log.trace("Start delete in reviewService");
 
-        checkReviewId(id);
+        Review review = findById(id);
 
-        return reviewsStorage.deleteById(id);
+        boolean isDeleted = reviewsStorage.deleteById(id);
+
+        if(!isDeleted) {
+            log.error("Unexpected: review {} exists but was not deleted", id);
+            throw new InternalServerException("Cannot delete review with id " + id);
+        }
+
+        Event event = ServiceUtils.createEvent(review.getUserId(),
+                EventType.REVIEW,
+                EventOperation.REMOVE,
+                review.getReviewId());
+        eventsRepository.createEvent(event);
+        log.debug("Event created: {}", event);
+
+        return isDeleted;
     }
 
     public Review findById(Long id) {

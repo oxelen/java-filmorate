@@ -16,7 +16,7 @@ public class EventsRepository extends BaseDbStorage<Event> {
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM events WHERE event_id = ?";
     private static final String DELETE_ALL_EVENTS_BY_USER_QUERY = "DELETE FROM events WHERE user_id = ?";
     private static final String FIND_EVENTS_BY_USER_QUERY =
-            "SELECT * FROM events WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?";
+            "SELECT * FROM events WHERE user_id = ? ORDER BY timestamp ASC LIMIT ?";
 
     public EventsRepository(JdbcTemplate jdbc,
                             @Qualifier("eventsRowMapper") RowMapper<Event> mapper) {
@@ -27,8 +27,8 @@ public class EventsRepository extends BaseDbStorage<Event> {
         Long eventId = insert(INSERT_QUERY,
                 System.currentTimeMillis(),
                 event.getUserId(),
-                event.getEventType(),
-                event.getOperation(),
+                event.getEventType().name(),
+                event.getOperation().name(),
                 event.getEntityId());
 
         event.setEventId(eventId);

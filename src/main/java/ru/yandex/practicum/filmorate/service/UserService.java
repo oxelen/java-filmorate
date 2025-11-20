@@ -48,7 +48,7 @@ public class UserService {
     }
 
     public User findById(Long id) {
-        return userStorage.findById(id).orElseThrow(() -> new NotFoundException("Пользователь не нашелся"));
+        return userStorage.findById(id).orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не найден."));
     }
 
     public Map<String, Long> addFriend(Long firstId, Long secondId) {
@@ -140,7 +140,14 @@ public class UserService {
     }
 
     public List<Event> getUserFeed(Long userId, int count) {
+        log.debug("Starting searching userFeed for userId = {}, count = {}", userId, count);
         User user = findById(userId);
-        return eventsRepository.findEventsByUser(user.getId(), count);
+        try {
+            List<Event> eventsByUser = eventsRepository.findEventsByUser(user.getId(), count);
+            log.info("eventsByUser with id = {} has been found", user.getId());
+            return eventsByUser;
+        } catch (Exception e) {
+            throw new InternalServerException("Can't find events for user with id = " + user.getId());
+        }
     }
 }
