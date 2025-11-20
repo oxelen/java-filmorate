@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.dal.LikesRepository;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
@@ -43,8 +44,9 @@ public class FilmService {
 
     public Film create(Film film) {
         FilmValidator.validateFilm(film);
-        film = filmStorage.create(film);
 
+        film = filmStorage.create(film);
+        validateDirectorsExist(film);
         filmDirectorStorage.addDirectorsToFilm(film.getId(), film.getDirectors());
 
         return film;
@@ -53,7 +55,9 @@ public class FilmService {
     public Film update(Film newFilm) {
         FilmValidator.validateFilm(newFilm);
 
-        filmDirectorStorage.addDirectorsToFilm(newFilm.getId(), newFilm.getDirectors());
+        validateDirectorsExist(newFilm);
+        filmDirectorStorage.replaceDirectorsForFilm(newFilm.getId(), newFilm.getDirectors());
+
         return filmStorage.update(newFilm);
     }
 
@@ -129,6 +133,27 @@ public class FilmService {
                 return filmStorage.getFilmsByDirectorSortedByLikes(directorId);
             default:
                 throw new ValidationException("sortBy должен быть 'year' или 'likes'");
+        }
+    }
+
+    private void validateDirectorsExist(Film film) {
+        List<Director> directors = film.getDirectors();
+        if (directors == null || directors.isEmpty()) {
+            return;
+        }
+
+        List<Long> ids = directors.stream()
+                .map(Director::getId)
+                .toList();
+
+        List<Long> existing = directorStorage.findAllExistingIds(ids);
+
+        if (existing.size() != ids.size()) {
+            List<Long> missing = ids.stream()
+                    .filter(id -> !existing.contains(id))
+                    .toList();
+
+            throw new NotFoundException("Режиссёры не найдены: " + missing);
         }
     }
 }

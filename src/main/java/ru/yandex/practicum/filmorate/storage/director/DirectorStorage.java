@@ -15,4 +15,6 @@ public interface DirectorStorage {
     Optional<Director> findById(long id);
 
     List<Director> findAll();
+
+    List<Long> findAllExistingIds(List<Long> ids);
 }
