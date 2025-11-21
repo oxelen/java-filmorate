@@ -180,7 +180,7 @@ public class FilmService {
                 .toList();
     }
 
-    private void checkUserInStorage (Long...userIds) {
+    private void checkUserInStorage(Long... userIds) {
         for (Long userId : userIds) {
             if (!userStorage.containsUser(userId)) {
                 log.warn("Not found user id = {}", userId);
