@@ -21,7 +21,10 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmValidator;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -32,23 +35,16 @@ public class FilmService {
     private final LikesRepository likesRepository;
     private final DirectorStorage directorStorage;
     private final FilmDirectorStorage filmDirectorStorage;
+    private final EventsRepository eventsRepository;
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
-                       LikesRepository likesRepository, DirectorStorage directorStorage, FilmDirectorStorage filmDirectorStorage) {
+                       LikesRepository likesRepository, DirectorStorage directorStorage, FilmDirectorStorage filmDirectorStorage, EventsRepository eventsRepository) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.likesRepository = likesRepository;
         this.directorStorage = directorStorage;
         this.filmDirectorStorage = filmDirectorStorage;
-    private final EventsRepository eventsRepository;
-
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
-                       @Qualifier("userDbStorage") UserStorage userStorage,
-                       LikesRepository likesRepository, EventsRepository eventsRepository) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-        this.likesRepository = likesRepository;
         this.eventsRepository = eventsRepository;
     }
 
@@ -170,6 +166,9 @@ public class FilmService {
                     .toList();
 
             throw new NotFoundException("Режиссёры не найдены: " + missing);
+        }
+    }
+
     public Collection<Film> getCommonFilms(Long userId, Long friendId) {
         checkUserInStorage(userId, friendId);
 
@@ -181,7 +180,7 @@ public class FilmService {
                 .toList();
     }
 
-    private void checkUserInStorage(Long... userIds) {
+    private void checkUserInStorage (Long...userIds) {
         for (Long userId : userIds) {
             if (!userStorage.containsUser(userId)) {
                 log.warn("Not found user id = {}", userId);
