@@ -33,15 +33,14 @@ public class UserService {
     public UserService(
             @Qualifier("userDbStorage") UserStorage userStorage,
             FriendsRepository friendsRepository,
-            FilmService filmService) { // Внедряем FilmService
-    public
-        UserService(@Qualifier("userDbStorage") UserStorage userStorage, FriendsRepository friendsRepository, EventsRepository eventsRepository)
-        {
-            this.userStorage = userStorage;
-            this.friendsRepository = friendsRepository;
-            this.filmService = filmService;
-            this.eventsRepository = eventsRepository;
-        }
+            FilmService filmService,
+            EventsRepository eventsRepository) {
+        this.userStorage = userStorage;
+        this.friendsRepository = friendsRepository;
+        this.filmService = filmService;
+        this.eventsRepository = eventsRepository;
+    }
+
 
         public User create (User user){
             UserValidator.validateUser(user);
