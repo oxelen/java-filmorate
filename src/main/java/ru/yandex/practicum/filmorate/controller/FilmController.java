@@ -79,8 +79,7 @@ public class FilmController {
     public List<Film> getFilmsByDirector(@PathVariable Long directorId, @RequestParam String sortBy) {
         return filmService.getFilmsByDirector(directorId, sortBy);
         @GetMapping("/common")
-        public Collection<Film> findCommonFilms (@RequestParam Long userId,
-                @RequestParam Long friendId){
+        public Collection<Film> findCommonFilms (@RequestParam Long userId, @RequestParam Long friendId) {
             log.info("Running GET METHOD find common films");
             checkIds(userId, friendId);
 
