@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.*;
@@ -16,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
+@AutoConfigureTestDatabase
 @Transactional
 public class FilmServiceIntegrationTest {
     private final UserDbStorage userStorage;
@@ -64,7 +66,7 @@ public class FilmServiceIntegrationTest {
         assertThat(genresRepository.findFilmGenres(film.getId())).contains(genre);
 
         filmService.likeFilm(film.getId(), user.getId());
-        assertThat(likesRepository.findAllLikes(film.getId())).contains(user.getId());
+        assertThat(likesRepository.findAllLikesByFilmId(film.getId())).contains(user.getId());
 
         reviewService.create(review);
         assertThat(reviewsDbStorage.findById(review.getReviewId())).contains(review);
@@ -73,6 +75,6 @@ public class FilmServiceIntegrationTest {
 
         assertThat(reviewsDbStorage.findAll()).doesNotContain(review);
         assertThat(genresRepository.findFilmGenres(film.getId())).doesNotContain(genre);
-        assertThat(likesRepository.findAllLikes(film.getId())).doesNotContain(user.getId());
+        assertThat(likesRepository.findAllLikesByFilmId(film.getId())).doesNotContain(user.getId());
     }
 }

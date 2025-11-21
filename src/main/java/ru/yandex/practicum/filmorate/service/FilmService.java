@@ -56,7 +56,7 @@ public class FilmService {
     }
 
     public Film findById(Long id) {
-        return filmStorage.findById(id);
+        return filmStorage.findById(id).orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
     }
 
     public Map<String, Long> likeFilm(Long filmId, Long userId) {
