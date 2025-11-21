@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.dal;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -18,8 +17,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Slf4j
-@Repository
-@Qualifier("filmDbStorage")
+@Repository("filmDbStorage")
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final MPAsRepository mpasRepository;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -94,25 +92,21 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return findOne(FIND_BY_ID_QUERY, id).isPresent();
     }
 
-    /**
-     * Находит ID наиболее похожего пользователя по совпадению лайков на фильмы.
-     * @param userId ID целевого пользователя
-     * @return ID похожего пользователя или null, если не найден
-     */
+    //Находит ID наиболее похожего пользователя по совпадению лайков на фильмы.
     @Transactional(readOnly = true)
     public Long getMostSimilarUser(Long userId) {
         log.debug("Finding most similar user for userId={}", userId);
 
         String sql = """
-        SELECT fl2.user_id
-        FROM likes fl1
-        JOIN likes fl2 ON fl1.film_id = fl2.film_id
-        WHERE fl1.user_id = :userId
-          AND fl2.user_id != :userId
-        GROUP BY fl2.user_id
-        ORDER BY COUNT(*) DESC
-        LIMIT 1
-        """;
+                SELECT fl2.user_id
+                FROM likes fl1
+                JOIN likes fl2 ON fl1.film_id = fl2.film_id
+                WHERE fl1.user_id = :userId
+                  AND fl2.user_id != :userId
+                GROUP BY fl2.user_id
+                ORDER BY COUNT(*) DESC
+                LIMIT 1
+                """;
 
         MapSqlParameterSource params = new MapSqlParameterSource("userId", userId);
 
@@ -198,11 +192,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
 
     private void updGenres(Film film) {
-        if (film.getGenres() == null) return;
-
         film.getGenres().stream()
-                .filter(genre -> genre.getId() != null)
-                .distinct()
-                .forEach(genre -> insert(INSERT_FILM_GENRE_QUERY, film.getId(), genre.getId()));
+                .map(Genre::getId)
+                .forEach(genre_id -> insert(INSERT_FILM_GENRE_QUERY, film.getId(), genre_id));
     }
 }

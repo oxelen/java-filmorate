@@ -61,4 +61,13 @@ public class BaseDbStorage<T> {
         int rowsDeleted = jdbc.update(query, params);
         return rowsDeleted > 0;
     }
+
+    protected Integer findCount(String query, Object... params) {
+        Integer res = jdbc.queryForObject(query, Integer.class, params);
+        if (res == null) {
+            throw new InternalServerException("Ошибка при выполнении " + query);
+        }
+
+        return res;
+    }
 }
