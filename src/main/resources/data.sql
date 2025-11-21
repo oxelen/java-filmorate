@@ -1,6 +1,5 @@
-DELETE FROM MPAs;
 
-INSERT INTO
+MERGE INTO
   MPAs (id, name)
 VALUES
   (1, 'G'),
@@ -9,9 +8,8 @@ VALUES
   (4, 'R'),
   (5, 'NC-17');
 
-DELETE FROM genres;
 
-INSERT INTO
+MERGE INTO
   genres (id, name)
 VALUES
   (1, 'Комедия'),
