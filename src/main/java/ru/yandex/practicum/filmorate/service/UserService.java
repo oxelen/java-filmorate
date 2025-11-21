@@ -5,7 +5,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.*;
+import ru.yandex.practicum.filmorate.model.Event.Event;
+import ru.yandex.practicum.filmorate.model.Event.EventOperation;
+import ru.yandex.practicum.filmorate.model.Event.EventType;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
+import ru.yandex.practicum.filmorate.storage.dal.EventsRepository;
 import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
 import ru.yandex.practicum.filmorate.storage.dal.FriendsRepository;
 import ru.yandex.practicum.filmorate.storage.dal.LikesRepository;
@@ -13,6 +18,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserValidator;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,14 +28,12 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserStorage userStorage;
     private final FriendsRepository friendsRepository;
-    private final LikesRepository likesRepository;
+    private final EventsRepository eventsRepository;
 
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage,
-                       FriendsRepository friendsRepository,
-                       LikesRepository likesRepository) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, FriendsRepository friendsRepository, EventsRepository eventsRepository) {
         this.userStorage = userStorage;
         this.friendsRepository = friendsRepository;
-        this.likesRepository = likesRepository;
+        this.eventsRepository = eventsRepository;
     }
 
     public User create(User user) {
@@ -63,6 +67,10 @@ public class UserService {
         friendsRepository.create(user.getId(), friend.getId());
         log.info("User with id: {} has been added to friends of user with id: {}", friend.getId(), user.getId());
 
+        Event event = ServiceUtils.createEvent(firstId, EventType.FRIEND, EventOperation.ADD, secondId);
+        eventsRepository.createEvent(event);
+        log.debug("Event created: {}", event);
+
         return Map.of("firstId", firstId, "secondId", secondId);
     }
 
@@ -77,6 +85,10 @@ public class UserService {
         friendsRepository.delete(user.getId(), friendToRemove.getId());
         log.info("User with id: {} has been removed from friends of user with id: {}",
                 friendToRemove.getId(), user.getId());
+
+        Event event = ServiceUtils.createEvent(firstId, EventType.FRIEND, EventOperation.REMOVE, secondId);
+        eventsRepository.createEvent(event);
+        log.debug("Event created: {}", event);
 
         return Map.of("firstId", firstId, "secondId", secondId);
     }
@@ -123,6 +135,18 @@ public class UserService {
         } else {
             log.warn("User with id = {} not friend of User with id = {}", deletedUserId, userId);
             throw new ConditionsNotMetException("Пользователи с id = " + userId + ", " + deletedUserId + " не друзья");
+        }
+    }
+
+    public List<Event> getUserFeed(Long userId, int count) {
+        log.debug("Starting searching userFeed for userId = {}, count = {}", userId, count);
+        User user = findById(userId);
+        try {
+            List<Event> eventsByUser = eventsRepository.findEventsByUser(user.getId(), count);
+            log.info("eventsByUser with id = {} has been found", user.getId());
+            return eventsByUser;
+        } catch (Exception e) {
+            throw new InternalServerException("Can't find events for user with id = " + user.getId());
         }
     }
 

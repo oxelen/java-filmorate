@@ -8,7 +8,12 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event.Event;
+import ru.yandex.practicum.filmorate.model.Event.EventOperation;
+import ru.yandex.practicum.filmorate.model.Event.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
+import ru.yandex.practicum.filmorate.storage.dal.EventsRepository;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
 import ru.yandex.practicum.filmorate.storage.dal.GenresRepository;
@@ -30,16 +35,15 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final LikesRepository likesRepository;
-    private final GenresRepository genresRepository;
+    private final EventsRepository eventsRepository;
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
-                       LikesRepository likesRepository,
-                       GenresRepository genresRepository) {
+                       LikesRepository likesRepository, EventsRepository eventsRepository) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.likesRepository = likesRepository;
-        this.genresRepository = genresRepository;
+        this.eventsRepository = eventsRepository;
     }
 
     public Film create(Film film) {
@@ -80,6 +84,11 @@ public class FilmService {
 
 
         likesRepository.create(filmId, userId);
+
+        Event event = ServiceUtils.createEvent(userId, EventType.LIKE, EventOperation.ADD, filmId);
+        eventsRepository.createEvent(event);
+        log.debug("Event created: {}", event);
+
         log.info("User (id = {}) liked film (id ={})", userId, filmId);
         return Map.of("film Id", filmId,
                 "userId", userId);
@@ -103,6 +112,10 @@ public class FilmService {
         log.trace("User (id = {}) removed from likes of film (id = {})", userId, filmId);
 
         likesRepository.delete(filmId, userId);
+
+        Event event = ServiceUtils.createEvent(userId, EventType.LIKE, EventOperation.REMOVE, filmId);
+        eventsRepository.createEvent(event);
+        log.debug("Event created: {}", event);
 
         return Map.of("filmId", filmId,
                 "userId", userId);
