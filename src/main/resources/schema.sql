@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS reviews_ratings (
 CREATE TABLE IF NOT EXISTS events (
                         event_id     BIGSERIAL PRIMARY KEY,
                         timestamp    BIGINT NOT NULL,
-                        user_id      BIGINT REFERENCES users(id),
+                        user_id      BIGINT REFERENCES users(id) ON DELETE SET NULL,
                         event_type   VARCHAR(10) NOT NULL,
                         operation    VARCHAR(10) NOT NULL,
                         entity_id    BIGINT NOT NULL

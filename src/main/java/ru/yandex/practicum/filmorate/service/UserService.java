@@ -11,9 +11,7 @@ import ru.yandex.practicum.filmorate.model.Event.EventType;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
 import ru.yandex.practicum.filmorate.storage.dal.EventsRepository;
-import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
 import ru.yandex.practicum.filmorate.storage.dal.FriendsRepository;
-import ru.yandex.practicum.filmorate.storage.dal.LikesRepository;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserValidator;
 
@@ -154,15 +152,6 @@ public class UserService {
     public void deleteUserById(Long userId) {
         log.debug("Starting deleteUserById, userId = {}", userId);
         User user = findById(userId);
-
-        ServiceUtils.safeDelete(() -> friendsRepository.deleteAllByUserId(user.getId()),
-                "Failed to delete friend relations for user with id = ", userId);
-        log.debug("Deleted friend relations for userId = {}", userId);
-
-        ServiceUtils.safeDelete(() -> likesRepository.deleteAllByUserId(user.getId()),
-                "Failed to delete likes for user with id = ", userId);
-        log.debug("Deleted likes for userId = {}", userId);
-
 
         if (!userStorage.deleteById(user.getId())) {
             log.error("Failed to remove user with id = {}", userId);

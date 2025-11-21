@@ -74,7 +74,7 @@ public class FilmDbTests {
         film.getGenres().add(Genre.builder().id(1L).name("Комедия").build());
 
         Film created = filmStorage.create(film);
-        Film found = filmStorage.findById(created.getId());
+        Film found = filmStorage.findById(created.getId()).get();
 
         assertThat(found).isNotNull();
         assertThat(found.getName()).isEqualTo("test");
@@ -101,7 +101,7 @@ public class FilmDbTests {
 
         filmStorage.update(updated);
 
-        Film found = filmStorage.findById(film.getId());
+        Film found = filmStorage.findById(film.getId()).get();
         assertThat(found.getName()).isEqualTo("New Title");
         assertThat(found.getDescription()).isEqualTo("Updated Desc");
     }

@@ -14,9 +14,6 @@ import ru.yandex.practicum.filmorate.model.Event.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
 import ru.yandex.practicum.filmorate.storage.dal.EventsRepository;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
-import ru.yandex.practicum.filmorate.storage.dal.GenresRepository;
 import ru.yandex.practicum.filmorate.storage.dal.LikesRepository;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmValidator;
@@ -135,19 +132,10 @@ public class FilmService {
         log.debug("Starting deleteFilmById, filmId = {}", filmId);
         Film film = findById(filmId);
 
-        ServiceUtils.safeDelete(() -> likesRepository.deleteAllByFilmId(film.getId()),
-                "Failed to delete likes for film with id = ", filmId);
-        log.debug("Deleted likes for film with id = {}", filmId);
-
-        ServiceUtils.safeDelete(() -> genresRepository.deleteFilmGenresByFilmId(film.getId()),
-                "Failed to delete genres for film with id = ", filmId);
-        log.debug("Deleted genres for film with id = {}", filmId);
-
         if (!filmStorage.deleteById(film.getId())) {
             log.error("Failed to remove film with id = {}", filmId);
             throw new InternalServerException("Не удалось удалить фильм с id = " + filmId);
         }
-
         log.info("Film with id = {} has been successfully deleted", filmId);
     }
 }

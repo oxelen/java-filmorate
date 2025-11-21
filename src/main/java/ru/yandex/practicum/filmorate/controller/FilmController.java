@@ -80,7 +80,7 @@ public class FilmController {
 
     @DeleteMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteById(@RequestParam Long id) {
+    public void deleteById(@PathVariable Long id) {
         log.info("Running DELETE method: deleteFilmById");
         checkIds(id);
         filmService.deleteFilmById(id);

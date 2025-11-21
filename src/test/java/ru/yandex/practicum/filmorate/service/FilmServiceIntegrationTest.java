@@ -6,10 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.MPA;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.dal.*;
 
 import java.time.LocalDate;
@@ -26,10 +23,12 @@ public class FilmServiceIntegrationTest {
     private final LikesRepository likesRepository;
     private final FilmService filmService;
     private final GenresRepository genresRepository;
+    private final ReviewService reviewService;
+    private final ReviewsDbStorage reviewsDbStorage;
 
     @Test
-    @DisplayName("Удаление фильма должно очищать лайки и жанры, а также удалить его из базы")
-    void deleteFilmById_shouldRemoveFilmItsLikesAndGenres() {
+    @DisplayName("Удаление фильма должно очищать лайки, жанры и отзывы, а также удалить его из базы")
+    void deleteFilmById_shouldRemoveFilmItsLikesReviewsAndGenres() {
         User user = userStorage.create(User.builder()
                 .email("test@example.com")
                 .login("testUser")
@@ -50,6 +49,14 @@ public class FilmServiceIntegrationTest {
                 .mpa(mpa)
                 .build());
 
+        Review review = Review.builder()
+                .content("Test Review")
+                .isPositive(true)
+                .userId(user.getId())
+                .filmId(film.getId())
+                .useful(0)
+                .build();
+
         Genre genre = genresRepository.findById(1);
 
         film.getGenres().add(genre);
@@ -59,8 +66,12 @@ public class FilmServiceIntegrationTest {
         filmService.likeFilm(film.getId(), user.getId());
         assertThat(likesRepository.findAllLikes(film.getId())).contains(user.getId());
 
+        reviewService.create(review);
+        assertThat(reviewsDbStorage.findById(review.getReviewId())).contains(review);
+
         filmService.deleteFilmById(film.getId());
 
+        assertThat(reviewsDbStorage.findAll()).doesNotContain(review);
         assertThat(genresRepository.findFilmGenres(film.getId())).doesNotContain(genre);
         assertThat(likesRepository.findAllLikes(film.getId())).doesNotContain(user.getId());
     }
