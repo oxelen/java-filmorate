@@ -36,7 +36,7 @@ public class FilmRowMapper implements RowMapper<Film> {
                 .mpa(mpasRepository.findMPA(rs.getLong("MPA_id")).orElse(null))
                 .build();
 
-        film.getLikes().addAll(likesRepository.findAllLikes(filmId));
+        film.getLikes().addAll(likesRepository.findAllLikesByFilmId(filmId));
         film.getGenres().addAll(genresRepository.findFilmGenres(filmId));
         List<Director> directors = filmDirectorStorage.getDirectorsByFilmId(film.getId());
         film.getDirectors().addAll(directors != null ? directors : new ArrayList<>());
