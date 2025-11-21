@@ -1,3 +1,5 @@
+DELETE FROM MPAs;
+
 INSERT INTO
   MPAs (id, name)
 VALUES
