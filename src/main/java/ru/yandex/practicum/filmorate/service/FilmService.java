@@ -17,16 +17,12 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmValidator;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class FilmService {
-
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final LikesRepository likesRepository;
@@ -64,8 +60,7 @@ public class FilmService {
     public Map<String, Long> likeFilm(Long filmId, Long userId) {
         log.debug("Starting likeFilm. film id = {}, userId = {}", filmId, userId);
 
-        if (!userStorage.containsUser(userId))
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        checkUserInStorage(userId);
 
         Set<Long> likes = findById(filmId).getLikes();
         if (likes.contains(userId)) {
@@ -89,8 +84,7 @@ public class FilmService {
     public Map<String, Long> deleteLike(Long filmId, Long userId) {
         log.debug("Starting deleteLike, filmId = {}, userId = {}", filmId, userId);
 
-        if (!userStorage.containsUser(userId))
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        checkUserInStorage(userId);
 
         Set<Long> likes = findById(filmId).getLikes();
         if (!likes.contains(userId)) {
@@ -119,5 +113,25 @@ public class FilmService {
                 .sorted((o1, o2) -> (o2.getLikes().size() - o1.getLikes().size()))
                 .limit(count)
                 .collect(Collectors.toList());
+    }
+
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        checkUserInStorage(userId, friendId);
+
+        return likesRepository.findAllLikedByUserId(userId)
+                .stream()
+                .filter(likesRepository.findAllLikedByUserId(friendId)::contains)
+                .map(this::findById)
+                .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
+                .toList();
+    }
+
+    private void checkUserInStorage(Long... userIds) {
+        for (Long userId : userIds) {
+            if (!userStorage.containsUser(userId)) {
+                log.warn("Not found user id = {}", userId);
+                throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+            }
+        }
     }
 }

@@ -109,6 +109,13 @@ public class UserService {
         return firstFriends.stream().filter(secondFriends::contains).map(this::findById).collect(Collectors.toList());
     }
 
+    public boolean isFriends(Long firstId, Long secId) {
+        Set<Long> firstQueries = findById(firstId).getFriends();
+        Set<Long> secQueries = findById(secId).getFriends();
+
+        return firstQueries.contains(secId) && secQueries.contains(firstId);
+    }
+
     private void addUserToFriendList(Long userId, Long addedUserId) {
         log.debug("Starting addUserToFriendList userId = {}, addedUserId = {}", userId, addedUserId);
         Set<Long> friends = findById(userId).getFriends();
