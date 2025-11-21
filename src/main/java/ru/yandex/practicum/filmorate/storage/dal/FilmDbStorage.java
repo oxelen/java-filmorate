@@ -19,8 +19,8 @@ import java.util.List;
 @Qualifier("filmDbStorage")
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final MPAsRepository mpasRepository;
-    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private final FilmRowMapper filmRowMapper;  // ← Добавлено поле
+    private final JdbcTemplate jdbcTemplate;  // ← Теперь используем только JdbcTemplate
+    private final FilmRowMapper filmRowMapper;
 
     private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, MPA_id)" +
             "VALUES (?, ?, ?, ?, ?)";
@@ -39,12 +39,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     // Конструктор
     public FilmDbStorage(JdbcTemplate jdbcTemplate,
                          FilmRowMapper filmRowMapper,
-                         MPAsRepository mpasRepository,
-                         NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+                         MPAsRepository mpasRepository) {
         super(jdbcTemplate, filmRowMapper);
+        this.jdbcTemplate = jdbcTemplate;
         this.mpasRepository = mpasRepository;
-        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        this.filmRowMapper = filmRowMapper;  // ← Сохраняем в поле
+        this.filmRowMapper = filmRowMapper;
     }
 
     @Override
@@ -96,50 +95,56 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT
+            f.id,
+            f.name,
+            f.description,
+            f.release_date,
+            f.duration,
+            f.MPA_id,
+            COUNT(l.user_id) AS likes_count
+            FROM films f
+            JOIN likes l ON f.id = l.film_id
+            JOIN film_genres fg ON f.id = fg.film_id
+            JOIN genres g ON fg.genre_id = g.id
+            JOIN MPAs m ON f.MPA_id = m.id
+    """);
 
-        String sqlGetMostPopularFilms = """
-                SELECT
-                f.id,
-                f.name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.MPA_id,
-                COUNT(l.user_id) AS likes_count
-                FROM films f
-                JOIN likes l ON f.id = l.film_id
-                JOIN film_genres fg ON f.id = fg.film_id
-                JOIN genres g ON fg.genre_id = g.id
-                JOIN MPAs m ON f.MPA_id = m.id
-                """;
+    List<Object> paramValues = new ArrayList<>();
+    List<String> conditions = new ArrayList<>();
 
-        List<String> conditions = new ArrayList<>();
-        MapSqlParameterSource params = new MapSqlParameterSource();
-
-
-        if (genreId != null) {
-            conditions.add("g.id = :genreId");
-            params.addValue("genreId", genreId);
-        }
-        if (year != null) {
-            conditions.add("EXTRACT(YEAR FROM f.release_date) = :year  ");
-            params.addValue("year", year);
-        }
-
-        if (!conditions.isEmpty()) {
-            sqlGetMostPopularFilms += " WHERE " + String.join(" AND ", conditions);
-        }
-
-        sqlGetMostPopularFilms += " GROUP BY f.id, f.name, f.description, f.release_date, f.duration, f.MPA_id " +
-                "ORDER BY likes_count DESC " +
-                "LIMIT :count";
-        params.addValue("count", count);
-
-        System.out.println("Final SQL: " + sqlGetMostPopularFilms);
-        System.out.println("Params: " + params.getValues());
-
-        return namedParameterJdbcTemplate.query(sqlGetMostPopularFilms, params, filmRowMapper);  // Теперь работает!
+    // Добавляем условие по жанру, если задан
+    if (genreId != null) {
+        conditions.add("g.id = ?");
+        paramValues.add(genreId);
     }
+
+    // Добавляем условие по году, если задан
+    if (year != null) {
+        conditions.add("EXTRACT(YEAR FROM f.release_date) = ?");
+        paramValues.add(year);
+    }
+
+    // Если есть условия — добавляем WHERE
+    if (!conditions.isEmpty()) {
+        sql.append(" WHERE ").append(String.join(" AND ", conditions));
+    }
+
+    // Добавляем группировку, сортировку и LIMIT
+    sql.append(" GROUP BY f.id, f.name, f.description, f.release_date, f.duration, f.MPA_id ")
+       .append("ORDER BY likes_count DESC ")
+       .append("LIMIT ?");
+    paramValues.add(count);  // Добавляем count последним (для LIMIT ?)
+
+    // Выполняем запрос через JdbcTemplate
+    return jdbcTemplate.query(
+            sql.toString(),
+            paramValues.toArray(),
+            filmRowMapper
+    );
+}
+
 
     private void updGenres(Film film) {
         film.getGenres().stream()

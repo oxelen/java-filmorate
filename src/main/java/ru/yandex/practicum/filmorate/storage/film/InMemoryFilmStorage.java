@@ -88,7 +88,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
-        return List.of();
+        throw new UnsupportedOperationException("Метод находится в разработке");
     }
 
     private void updateFilmFields(Film oldFilm, Film newFilm) {
