@@ -3,26 +3,37 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.*;
+import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
+import ru.yandex.practicum.filmorate.exception.NoContentException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.dal.FriendsRepository;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserValidator;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 @Slf4j
 @Service
 public class UserService {
     private final UserStorage userStorage;
     private final FriendsRepository friendsRepository;
+    private final FilmService filmService; // Добавляем зависимость
 
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, FriendsRepository friendsRepository) {
+    public UserService(
+            @Qualifier("userDbStorage") UserStorage userStorage,
+            FriendsRepository friendsRepository,
+            FilmService filmService) { // Внедряем FilmService
         this.userStorage = userStorage;
         this.friendsRepository = friendsRepository;
+        this.filmService = filmService;
     }
 
     public User create(User user) {
@@ -122,4 +133,25 @@ public class UserService {
             throw new ConditionsNotMetException("Пользователи с id = " + userId + ", " + deletedUserId + " не друзья");
         }
     }
+
+    public List<Film> getRecommendations(Long userId) {
+        log.debug("Starting getRecommendations for user ID: {}", userId);
+
+        // 1. Проверяем существование пользователя
+        checkUserExists(userId);
+
+        // 2. Получаем рекомендации из FilmService
+        List<Film> recommendations = filmService.getRecommendationFilms(userId);
+
+        log.info("Retrieved {} recommended films for user ID: {}", recommendations.size(), userId);
+        return recommendations;
+    }
+
+    private void checkUserExists(Long userId) {
+        log.debug("Checking if user exists, userId = {}", userId);
+        if (!userStorage.containsUser(userId)) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден.");
+        }
+    }
+
 }
