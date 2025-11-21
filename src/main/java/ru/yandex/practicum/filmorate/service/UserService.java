@@ -38,6 +38,7 @@ public class UserService {
 
     public User create(User user) {
         UserValidator.validateUser(user);
+
         return userStorage.create(user);
     }
 
@@ -137,21 +138,14 @@ public class UserService {
     public List<Film> getRecommendations(Long userId) {
         log.debug("Starting getRecommendations for user ID: {}", userId);
 
-        // 1. Проверяем существование пользователя
-        checkUserExists(userId);
+        // Проверяем существование пользователя
+        User user = findById(userId);
 
-        // 2. Получаем рекомендации из FilmService
         List<Film> recommendations = filmService.getRecommendationFilms(userId);
 
         log.info("Retrieved {} recommended films for user ID: {}", recommendations.size(), userId);
         return recommendations;
     }
 
-    private void checkUserExists(Long userId) {
-        log.debug("Checking if user exists, userId = {}", userId);
-        if (!userStorage.containsUser(userId)) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден.");
-        }
-    }
 
 }

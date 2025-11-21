@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.yandex.practicum.filmorate.exception.DatabaseException;
 import ru.yandex.practicum.filmorate.exception.NoContentException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -32,5 +33,10 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleException(final Throwable e) {
         return new ErrorResponse("Exception", e.getMessage());
+    }
+
+    @ExceptionHandler(DatabaseException.class)
+    public ErrorResponse handleDatabaseException(final DatabaseException ex) {
+        return new ErrorResponse("Внутренняя ошибка сервера: ", ex.getMessage());
     }
 }

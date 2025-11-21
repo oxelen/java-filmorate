@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -88,8 +89,9 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> getRecommendationFilms(Long userId) {
-        return List.of();
+        throw new InternalServerException("Метод не реализован");
     }
+
 
     private void updateFilmFields(Film oldFilm, Film newFilm) {
         log.debug("Starting update Film fields, id = {}", newFilm.getId());
