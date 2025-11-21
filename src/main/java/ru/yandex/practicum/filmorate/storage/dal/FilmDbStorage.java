@@ -1,8 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.dal;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -33,7 +31,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) " +
             "VALUES (?, ?)";
 
-    // Конструктор
+
     public FilmDbStorage(JdbcTemplate jdbcTemplate,
                          FilmRowMapper filmRowMapper,
                          MPAsRepository mpasRepository) {
