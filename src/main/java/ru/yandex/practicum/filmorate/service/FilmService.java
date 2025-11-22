@@ -121,10 +121,11 @@ public class FilmService {
     public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
         List<Film> mostPopularFilms = filmStorage.getMostPopularFilms(count, genreId, year);
         if (mostPopularFilms.isEmpty()) {
-            throw new NotFoundException("По вашему запросу ничего не найдено");
+            log.info("Popular films list is empty for parameters: count={}, genreId={}, year={}", count, genreId, year);
+        } else {
+            log.info("Most popular films have been successfully found for count: {}, genreId: {}, year: {}",
+                    count, genreId, year);
         }
-        log.info("Most popular films have been successfully found for count: {}, genreId: {}, year: {}",
-                count, genreId, year);
         return mostPopularFilms;
     }
 

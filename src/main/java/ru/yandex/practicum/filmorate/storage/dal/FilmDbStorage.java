@@ -95,10 +95,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                         f.MPA_id,
                         COUNT(l.user_id) AS likes_count
                         FROM films f
-                        JOIN likes l ON f.id = l.film_id
-                        JOIN film_genres fg ON f.id = fg.film_id
-                        JOIN genres g ON fg.genre_id = g.id
-                        JOIN MPAs m ON f.MPA_id = m.id
+                        LEFT JOIN likes l ON f.id = l.film_id
+                        LEFT JOIN film_genres fg ON f.id = fg.film_id
+                        LEFT JOIN genres g ON fg.genre_id = g.id
+                        LEFT JOIN MPAs m ON f.MPA_id = m.id
                 """);
 
         List<Object> paramValues = new ArrayList<>();
