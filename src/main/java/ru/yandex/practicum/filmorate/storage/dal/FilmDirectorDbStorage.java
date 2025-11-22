@@ -18,9 +18,9 @@ public class FilmDirectorDbStorage implements FilmDirectorStorage {
     private static final String DELETE_ALL = "DELETE FROM film_directors WHERE film_id = ?";
     private static final String SELECT_BY_FILM =
             "SELECT d.id, d.name " +
-            "FROM directors d " +
-            "JOIN film_directors fd ON d.id = fd.director_id " +
-            "WHERE fd.film_id = ?";
+                    "FROM directors d " +
+                    "JOIN film_directors fd ON d.id = fd.director_id " +
+                    "WHERE fd.film_id = ?";
     private static final String SELECT_FILMS_BY_DIRECTOR =
             "SELECT film_id FROM film_directors WHERE director_id = ?";
 

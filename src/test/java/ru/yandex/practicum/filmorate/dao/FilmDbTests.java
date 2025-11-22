@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.dal.FilmDbStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;

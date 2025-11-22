@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.service.util;
 
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.model.Event.*;
+import ru.yandex.practicum.filmorate.model.Event.Event;
+import ru.yandex.practicum.filmorate.model.Event.EventOperation;
+import ru.yandex.practicum.filmorate.model.Event.EventType;
 
 public class ServiceUtils {
 

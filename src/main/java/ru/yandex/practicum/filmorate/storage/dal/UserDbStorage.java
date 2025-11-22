@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository("userDbStorage")
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String INSERT_QUERY = "INSERT INTO users (email, login, name, birthday)" +
-                                               "VALUES (?, ?, ?, ?)";
+            "VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";

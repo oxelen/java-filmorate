@@ -84,7 +84,7 @@ public class ReviewController {
 
     @DeleteMapping("/{id}/like/{userId}")
     public boolean deleteLike(@PathVariable Long id,
-                               @PathVariable Long userId) {
+                              @PathVariable Long userId) {
         log.info("Starting DELETE METHOD delete like");
 
         PathVariableValidator.checkIds(id, userId);

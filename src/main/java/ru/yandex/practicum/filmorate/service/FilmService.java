@@ -3,11 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Event.Event;
 import ru.yandex.practicum.filmorate.model.Event.EventOperation;
@@ -108,7 +104,7 @@ public class FilmService {
         if (!likes.contains(userId)) {
             log.warn("Likes of film (id = {}) does not contains like from user (id = {})", filmId, userId);
             throw new ConditionsNotMetException("В списке лайков фильма с id = " + filmId
-                                                + " нет пользователя с id = " + userId);
+                    + " нет пользователя с id = " + userId);
         }
 
         likes.remove(userId);
