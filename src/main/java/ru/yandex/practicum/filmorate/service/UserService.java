@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.Event.Event;
 import ru.yandex.practicum.filmorate.model.Event.EventOperation;
 import ru.yandex.practicum.filmorate.model.Event.EventType;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
 import ru.yandex.practicum.filmorate.storage.dal.EventsRepository;
@@ -20,16 +21,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.Map.of;
+
 @Slf4j
 @Service
 public class UserService {
     private final UserStorage userStorage;
     private final FriendsRepository friendsRepository;
+    private final FilmService filmService;
     private final EventsRepository eventsRepository;
 
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, FriendsRepository friendsRepository, EventsRepository eventsRepository) {
+
+    public UserService(
+            @Qualifier("userDbStorage") UserStorage userStorage,
+            FriendsRepository friendsRepository,
+            FilmService filmService,
+            EventsRepository eventsRepository) {
         this.userStorage = userStorage;
         this.friendsRepository = friendsRepository;
+        this.filmService = filmService;
         this.eventsRepository = eventsRepository;
     }
 
@@ -48,7 +58,8 @@ public class UserService {
     }
 
     public User findById(Long id) {
-        return userStorage.findById(id).orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не найден."));
+        return userStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь не нашелся"));
     }
 
     public Map<String, Long> addFriend(Long firstId, Long secondId) {
@@ -69,7 +80,7 @@ public class UserService {
         eventsRepository.createEvent(event);
         log.debug("Event created: {}", event);
 
-        return Map.of("firstId", firstId, "secondId", secondId);
+        return of("firstId", firstId, "secondId", secondId);
     }
 
     public Map<String, Long> deleteFriend(Long firstId, Long secondId) {
@@ -84,35 +95,36 @@ public class UserService {
 
         deleteFromFriendList(firstId, secondId);
         log.trace("secondId removed from firstId friends");
-
         friendsRepository.delete(firstId, secondId);
 
         Event event = ServiceUtils.createEvent(firstId, EventType.FRIEND, EventOperation.REMOVE, secondId);
         eventsRepository.createEvent(event);
         log.debug("Event created: {}", event);
 
-        return Map.of("firstId", firstId, "secondId", secondId);
+        return of("firstId", firstId, "secondId", secondId);
     }
 
     public Collection<User> findAllFriends(Long id) {
         log.debug("Starting findAllFriends, id = {}", id);
-
-        return findById(id).getFriends().stream().map(this::findById).collect(Collectors.toList());
+        return findById(id).getFriends().stream()
+                .map(this::findById)
+                .collect(Collectors.toList());
     }
 
     public Collection<User> findCommonFriends(Long firstId, Long secondId) {
         log.debug("Starting findCommonFriends, firstId = {}, secondId = {}", firstId, secondId);
-
         Set<Long> firstFriends = findById(firstId).getFriends();
         Set<Long> secondFriends = findById(secondId).getFriends();
 
-        return firstFriends.stream().filter(secondFriends::contains).map(this::findById).collect(Collectors.toList());
+        return firstFriends.stream()
+                .filter(secondFriends::contains)
+                .map(this::findById)
+                .collect(Collectors.toList());
     }
 
     public boolean isFriends(Long firstId, Long secId) {
         Set<Long> firstQueries = findById(firstId).getFriends();
         Set<Long> secQueries = findById(secId).getFriends();
-
         return firstQueries.contains(secId) && secQueries.contains(firstId);
     }
 
@@ -146,6 +158,19 @@ public class UserService {
         }
     }
 
+    public List<Film> getRecommendations(Long userId) {
+        log.debug("Starting getRecommendations for user ID: {}", userId);
+
+
+        // Проверяем существование пользователя
+        User user = findById(userId);
+
+        List<Film> recommendations = filmService.getRecommendationFilms(userId);
+
+        log.info("Retrieved {} recommended films for user ID: {}", recommendations.size(), userId);
+        return recommendations;
+    }
+
     public List<Event> getUserFeed(Long userId, int count) {
         log.debug("Starting searching userFeed for userId = {}, count = {}", userId, count);
         User user = findById(userId);
@@ -157,4 +182,5 @@ public class UserService {
             throw new InternalServerException("Can't find events for user with id = " + user.getId());
         }
     }
+
 }

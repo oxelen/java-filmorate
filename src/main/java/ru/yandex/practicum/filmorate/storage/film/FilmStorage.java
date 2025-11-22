@@ -19,4 +19,6 @@ public interface FilmStorage {
     List<Film> getFilmsByDirectorSortedByYear(Long directorId);
 
     List<Film> getFilmsByDirectorSortedByLikes(Long directorId);
+
+    List<Film> getRecommendationFilms(Long userId);
 }
