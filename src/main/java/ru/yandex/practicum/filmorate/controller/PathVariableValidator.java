@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 @Slf4j
 public class PathVariableValidator {
@@ -13,7 +14,7 @@ public class PathVariableValidator {
             }
             if (id < 0) {
                 log.warn("User id is below 0, id = {}", id);
-                throw new ConditionsNotMetException("Id должен быть не меньше 0, указанный id = " + id);
+                throw new NotFoundException("Id должен быть не меньше 0, указанный id = " + id);
             }
         }
     }

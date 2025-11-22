@@ -8,6 +8,8 @@ import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 
 import java.util.List;
 
+import static ru.yandex.practicum.filmorate.storage.director.DirectorValidator.*;
+
 @Service
 @RequiredArgsConstructor
 public class DirectorService {
@@ -15,10 +17,14 @@ public class DirectorService {
     private final DirectorStorage directorStorage;
 
     public Director createDirector(Director director) {
+        validateName(director);
+
         return directorStorage.create(director);
     }
 
     public Director updateDirector(Director director) {
+        validateDirector(director);
+
         return directorStorage.update(director);
     }
 

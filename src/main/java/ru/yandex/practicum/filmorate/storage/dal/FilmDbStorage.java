@@ -37,6 +37,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) " +
             "VALUES (?, ?)";
+    private static final String DELETE_FILM_GENRE_QUERY = "DELETE FROM film_genres WHERE film_id = ?";
     private static final String FIND_FILMS_BY_DIRECTOR_BY_YEAR = """
             SELECT f.*
             FROM films f
@@ -128,8 +129,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public Optional<Film> findById(Long id) {
-        return findOne(FIND_BY_ID_QUERY, id)
-                ;
+        return findOne(FIND_BY_ID_QUERY, id);
     }
 
     @Override
@@ -286,6 +286,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
 
     private void updGenres(Film film) {
+        delete(DELETE_FILM_GENRE_QUERY, film.getId());
         film.getGenres().stream()
                 .map(Genre::getId)
                 .forEach(genre_id -> insert(INSERT_FILM_GENRE_QUERY, film.getId(), genre_id));

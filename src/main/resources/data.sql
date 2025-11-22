@@ -1,4 +1,3 @@
-
 MERGE INTO
   MPAs (id, name)
 VALUES
