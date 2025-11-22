@@ -26,4 +26,11 @@ public interface FilmStorage {
     List<Film> getMostPopularFilms(int count, Integer genreId, Integer year);
 
     boolean deleteById(Long id);
+
+    List<Film> findByTitle(String query);
+
+    List<Film> findByDirector(String query);
+
+    List<Film> findByTitleOrDirector(String query);
+
 }

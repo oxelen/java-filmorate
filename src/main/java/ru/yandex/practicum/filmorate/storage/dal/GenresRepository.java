@@ -12,10 +12,10 @@ import java.util.List;
 @Repository
 public class GenresRepository extends BaseDbStorage<Genre> {
     private static final String FIND_FILM_GENRES_QUERY = "SELECT * " +
-                                                         "FROM genres " +
-                                                         "WHERE id IN (SELECT genre_id " +
-                                                         "FROM film_genres " +
-                                                         "WHERE film_id = ?)";
+            "FROM genres " +
+            "WHERE id IN (SELECT genre_id " +
+            "FROM film_genres " +
+            "WHERE film_id = ?)";
     private static final String FIND_ALL_QUERY = "SELECT * FROM genres";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE id = ?";
     private static final String DELETE_FILM_GENRES_QUERY = "DELETE FROM film_genres WHERE film_id = ?";

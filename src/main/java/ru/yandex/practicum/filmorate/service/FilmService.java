@@ -4,16 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Event.Event;
 import ru.yandex.practicum.filmorate.model.Event.EventOperation;
 import ru.yandex.practicum.filmorate.model.Event.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.SearchType;
 import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
 import ru.yandex.practicum.filmorate.storage.dal.EventsRepository;
 import ru.yandex.practicum.filmorate.storage.dal.LikesRepository;
@@ -23,10 +20,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmValidator;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -112,7 +106,7 @@ public class FilmService {
         if (!likes.contains(userId)) {
             log.warn("Likes of film (id = {}) does not contains like from user (id = {})", filmId, userId);
             throw new ConditionsNotMetException("В списке лайков фильма с id = " + filmId
-                                                + " нет пользователя с id = " + userId);
+                    + " нет пользователя с id = " + userId);
         }
 
         likes.remove(userId);
@@ -217,6 +211,44 @@ public class FilmService {
                 log.warn("Not found user id = {}", userId);
                 throw new NotFoundException("Пользователь с id = " + userId + " не найден");
             }
+        }
+    }
+
+    public List<Film> searchFilms(String query, String by) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("Пустой запрос! Проверьте корректность ввода подстроки");
+        }
+
+        Set<SearchType> searchBy = parseSearchTypes(by);
+
+        if (searchBy.isEmpty()) {
+            throw new ValidationException("Необходимо указать хотя бы один тип поиска");
+        }
+
+        if (searchBy.contains(SearchType.TITLE) && searchBy.contains(SearchType.DIRECTOR)) {
+            return filmStorage.findByTitleOrDirector(query);
+        }
+
+        if (searchBy.contains(SearchType.TITLE)) {
+            return filmStorage.findByTitle(query);
+        }
+
+        if (searchBy.contains(SearchType.DIRECTOR)) {
+            return filmStorage.findByDirector(query);
+        }
+
+        throw new InternalServerException("Неожиданное состояние поиска");
+    }
+
+    private Set<SearchType> parseSearchTypes(String by) {
+        try {
+            return Arrays.stream(by.split(","))
+                    .map(String::trim)
+                    .map(String::toUpperCase)
+                    .map(SearchType::valueOf)
+                    .collect(Collectors.toSet());
+        } catch (Exception e) {
+            throw new ValidationException("Несуществующий тип поиска, доступны: title, director");
         }
     }
 }

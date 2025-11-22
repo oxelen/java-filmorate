@@ -11,7 +11,7 @@ import java.util.List;
 public class FriendsRepository extends BaseDbStorage<Long> {
     private static final String FIND_ALL_FRIENDS_QUERY = "SELECT second_id FROM friends WHERE first_id = ?";
     private static final String INSERT_QUERY = "INSERT INTO friends (first_id, second_id) " +
-                                               "VALUES (?, ?)";
+            "VALUES (?, ?)";
     private static final String DELETE_QUERY = "DELETE FROM friends WHERE first_id = ? AND second_id = ?";
     private static final String DELETE_ALL_BY_USER_ID_QUERY = "DELETE FROM friends WHERE first_id = ? OR second_id = ?";
 

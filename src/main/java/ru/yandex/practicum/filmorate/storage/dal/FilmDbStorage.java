@@ -25,18 +25,18 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, MPA_id)" +
-                                               "VALUES (?, ?, ?, ?, ?)";
+            "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE films " +
-                                               "SET name = ?, " +
-                                               "description = ?, " +
-                                               "release_date = ?, " +
-                                               "duration = ?, " +
-                                               "MPA_id = ? " +
-                                               "WHERE id = ?";
+            "SET name = ?, " +
+            "description = ?, " +
+            "release_date = ?, " +
+            "duration = ?, " +
+            "MPA_id = ? " +
+            "WHERE id = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM films";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO film_genres (film_id, genre_id) " +
-                                                          "VALUES (?, ?)";
+            "VALUES (?, ?)";
     private static final String FIND_FILMS_BY_DIRECTOR_BY_YEAR = """
             SELECT f.*
             FROM films f
@@ -55,6 +55,36 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             """;
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
 
+    private static final String FIND_BY_TITLE = """
+            SELECT f.*, COUNT(l.user_id) AS likes_count
+            FROM films f
+            LEFT JOIN likes l ON f.id = l.film_id
+            WHERE LOWER(f.name) LIKE LOWER(?)
+            GROUP BY f.id
+            ORDER BY likes_count DESC
+            """;
+
+    private static final String FIND_BY_DIRECTOR = """
+            SELECT f.*, COUNT(l.user_id) AS likes_count
+            FROM films f
+            JOIN film_directors fd ON f.id = fd.film_id
+            JOIN directors d ON fd.director_id = d.id
+            LEFT JOIN likes l ON f.id = l.film_id
+            WHERE LOWER(d.name) LIKE LOWER(?)
+            GROUP BY f.id
+            ORDER BY likes_count DESC
+            """;
+
+    private static final String FIND_BY_TITLE_OR_DIRECTOR = """
+            SELECT f.*, COUNT(l.user_id) AS likes_count
+            FROM films f
+            LEFT JOIN film_directors fd ON f.id = fd.film_id
+            LEFT JOIN directors d ON fd.director_id = d.id
+            LEFT JOIN likes l ON f.id = l.film_id
+            WHERE LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)
+            GROUP BY f.id
+            ORDER BY likes_count DESC
+            """;
     // Конструктор
     public FilmDbStorage(JdbcTemplate jdbcTemplate,
                          FilmRowMapper filmRowMapper,
@@ -271,5 +301,20 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     public boolean deleteById(Long filmId) {
         return delete(DELETE_BY_ID_QUERY, filmId);
+    }
+
+    public List<Film> findByTitle(String query) {
+        String pattern = "%" + query + "%";
+        return jdbc.query(FIND_BY_TITLE, mapper, pattern);
+    }
+
+    public List<Film> findByDirector(String query) {
+        String pattern = "%" + query + "%";
+        return jdbc.query(FIND_BY_DIRECTOR, mapper, pattern);
+    }
+
+    public List<Film> findByTitleOrDirector(String query) {
+        String pattern = "%" + query + "%";
+        return jdbc.query(FIND_BY_TITLE_OR_DIRECTOR, mapper, pattern, pattern);
     }
 }
