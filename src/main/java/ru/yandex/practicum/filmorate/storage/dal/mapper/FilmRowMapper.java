@@ -38,7 +38,7 @@ public class FilmRowMapper implements RowMapper<Film> {
 
         film.getLikes().addAll(likesRepository.findAllLikesByFilmId(filmId));
         film.getGenres().addAll(genresRepository.findFilmGenres(filmId));
-        List<Director> directors = filmDirectorStorage.getDirectorsByFilmId(film.getId());
+        List<Director> directors = filmDirectorStorage.getDirectorsByFilmId(filmId);
         film.getDirectors().addAll(directors != null ? directors : new ArrayList<>());
 
         return film;

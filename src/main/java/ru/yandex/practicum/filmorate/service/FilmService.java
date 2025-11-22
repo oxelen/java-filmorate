@@ -61,10 +61,11 @@ public class FilmService {
     public Film update(Film newFilm) {
         FilmValidator.validateFilm(newFilm);
 
+        newFilm = filmStorage.update(newFilm);
         validateDirectorsExist(newFilm);
         filmDirectorStorage.replaceDirectorsForFilm(newFilm.getId(), newFilm.getDirectors());
 
-        return filmStorage.update(newFilm);
+        return newFilm;
     }
 
     public Collection<Film> findAll() {
