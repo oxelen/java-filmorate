@@ -5,7 +5,10 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.controller.PathVariableValidator.checkIds;
 
@@ -74,7 +77,17 @@ public class FilmController {
 
     @GetMapping("/director/{directorId}")
     public List<Film> getFilmsByDirector(@PathVariable Long directorId, @RequestParam String sortBy) {
+        log.info("Running GET METHOD getFilmsByDirector");
+        checkIds(directorId);
         return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/common")
+    public Collection<Film> findCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
+        log.info("Running GET METHOD find common films");
+        checkIds(userId, friendId);
+
+        return filmService.getCommonFilms(userId, friendId);
     }
 
     @GetMapping("/search")

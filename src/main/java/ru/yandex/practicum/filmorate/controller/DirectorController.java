@@ -7,6 +7,8 @@ import ru.yandex.practicum.filmorate.service.DirectorService;
 
 import java.util.List;
 
+import static ru.yandex.practicum.filmorate.controller.PathVariableValidator.checkIds;
+
 @RestController
 @RequestMapping("/directors")
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class DirectorController {
 
     @GetMapping("/{id}")
     public Director getDirectorById(@PathVariable long id) {
+        checkIds(id);
         return directorService.getDirectorById(id);
     }
 
@@ -36,6 +39,7 @@ public class DirectorController {
 
     @DeleteMapping("/{id}")
     public void deleteDirector(@PathVariable long id) {
+        checkIds(id);
         directorService.deleteDirector(id);
     }
 }

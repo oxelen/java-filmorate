@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Event.Event;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -79,5 +80,12 @@ public class UserController {
 
         checkIds(id, otherId);
         return userService.findCommonFriends(id, otherId);
+    }
+
+    @GetMapping("/{id}/feed")
+    public Collection<Event> findEventsByUser(@PathVariable Long id,
+                                              @RequestParam(defaultValue = "10") int count) {
+        checkIds(id);
+        return userService.getUserFeed(id, count);
     }
 }

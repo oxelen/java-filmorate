@@ -51,4 +51,10 @@ public class FilmDirectorDbStorage implements FilmDirectorStorage {
     public List<Long> getFilmsByDirector(long directorId) {
         return jdbc.queryForList(SELECT_FILMS_BY_DIRECTOR, Long.class, directorId);
     }
+
+    @Override
+    public void replaceDirectorsForFilm(long filmId, List<Director> directors) {
+        deleteDirectorsFromFilm(filmId);
+        addDirectorsToFilm(filmId, directors);
+    }
 }

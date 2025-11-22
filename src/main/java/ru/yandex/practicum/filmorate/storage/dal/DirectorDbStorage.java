@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class DirectorDbStorage extends BaseDbStorage<Director> implements DirectorStorage {
@@ -48,5 +49,22 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
     @Override
     public List<Director> findAll() {
         return findMany(SELECT_ALL);
+    }
+
+    @Override
+    public List<Long> findAllExistingIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+
+        String placeholders = ids.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(", "));
+
+        String sql = "SELECT id FROM directors WHERE id IN (" + placeholders + ")";
+
+        return jdbc.query(sql,
+                (rs, rowNum) -> rs.getLong("id"),
+                ids.toArray());
     }
 }

@@ -8,8 +8,14 @@ import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Event.Event;
+import ru.yandex.practicum.filmorate.model.Event.EventOperation;
+import ru.yandex.practicum.filmorate.model.Event.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.SearchType;
+import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
+import ru.yandex.practicum.filmorate.storage.dal.EventsRepository;
 import ru.yandex.practicum.filmorate.storage.dal.LikesRepository;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.director.FilmDirectorStorage;
@@ -23,27 +29,29 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class FilmService {
-
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final LikesRepository likesRepository;
     private final DirectorStorage directorStorage;
     private final FilmDirectorStorage filmDirectorStorage;
+    private final EventsRepository eventsRepository;
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
-                       LikesRepository likesRepository, DirectorStorage directorStorage, FilmDirectorStorage filmDirectorStorage) {
+                       LikesRepository likesRepository, DirectorStorage directorStorage, FilmDirectorStorage filmDirectorStorage, EventsRepository eventsRepository) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.likesRepository = likesRepository;
         this.directorStorage = directorStorage;
         this.filmDirectorStorage = filmDirectorStorage;
+        this.eventsRepository = eventsRepository;
     }
 
     public Film create(Film film) {
         FilmValidator.validateFilm(film);
-        film = filmStorage.create(film);
 
+        film = filmStorage.create(film);
+        validateDirectorsExist(film);
         filmDirectorStorage.addDirectorsToFilm(film.getId(), film.getDirectors());
 
         return film;
@@ -52,8 +60,11 @@ public class FilmService {
     public Film update(Film newFilm) {
         FilmValidator.validateFilm(newFilm);
 
-        filmDirectorStorage.addDirectorsToFilm(newFilm.getId(), newFilm.getDirectors());
-        return filmStorage.update(newFilm);
+        newFilm = filmStorage.update(newFilm);
+        validateDirectorsExist(newFilm);
+        filmDirectorStorage.replaceDirectorsForFilm(newFilm.getId(), newFilm.getDirectors());
+
+        return newFilm;
     }
 
     public Collection<Film> findAll() {
@@ -67,8 +78,7 @@ public class FilmService {
     public Map<String, Long> likeFilm(Long filmId, Long userId) {
         log.debug("Starting likeFilm. film id = {}, userId = {}", filmId, userId);
 
-        if (!userStorage.containsUser(userId))
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        checkUserInStorage(userId);
 
         Set<Long> likes = findById(filmId).getLikes();
         if (likes.contains(userId)) {
@@ -81,6 +91,10 @@ public class FilmService {
 
         likesRepository.create(filmId, userId);
 
+        Event event = ServiceUtils.createEvent(userId, EventType.LIKE, EventOperation.ADD, filmId);
+        eventsRepository.createEvent(event);
+        log.debug("Event created: {}", event);
+
         return Map.of("film Id", filmId,
                 "userId", userId);
     }
@@ -88,8 +102,7 @@ public class FilmService {
     public Map<String, Long> deleteLike(Long filmId, Long userId) {
         log.debug("Starting deleteLike, filmId = {}, userId = {}", filmId, userId);
 
-        if (!userStorage.containsUser(userId))
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        checkUserInStorage(userId);
 
         Set<Long> likes = findById(filmId).getLikes();
         if (!likes.contains(userId)) {
@@ -102,6 +115,10 @@ public class FilmService {
         log.trace("User (id = {}) removed from likes of film (id = {})", userId, filmId);
 
         likesRepository.delete(filmId, userId);
+
+        Event event = ServiceUtils.createEvent(userId, EventType.LIKE, EventOperation.REMOVE, filmId);
+        eventsRepository.createEvent(event);
+        log.debug("Event created: {}", event);
 
         return Map.of("filmId", filmId,
                 "userId", userId);
@@ -128,6 +145,47 @@ public class FilmService {
                 return filmStorage.getFilmsByDirectorSortedByLikes(directorId);
             default:
                 throw new ValidationException("sortBy должен быть 'year' или 'likes'");
+        }
+    }
+
+    private void validateDirectorsExist(Film film) {
+        List<Director> directors = film.getDirectors();
+        if (directors == null || directors.isEmpty()) {
+            return;
+        }
+
+        List<Long> ids = directors.stream()
+                .map(Director::getId)
+                .toList();
+
+        List<Long> existing = directorStorage.findAllExistingIds(ids);
+
+        if (existing.size() != ids.size()) {
+            List<Long> missing = ids.stream()
+                    .filter(id -> !existing.contains(id))
+                    .toList();
+
+            throw new NotFoundException("Режиссёры не найдены: " + missing);
+        }
+    }
+
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        checkUserInStorage(userId, friendId);
+
+        return likesRepository.findAllLikedByUserId(userId)
+                .stream()
+                .filter(likesRepository.findAllLikedByUserId(friendId)::contains)
+                .map(this::findById)
+                .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
+                .toList();
+    }
+
+    private void checkUserInStorage(Long... userIds) {
+        for (Long userId : userIds) {
+            if (!userStorage.containsUser(userId)) {
+                log.warn("Not found user id = {}", userId);
+                throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+            }
         }
     }
 

@@ -13,4 +13,6 @@ public interface FilmDirectorStorage {
     List<Director> getDirectorsByFilmId(long filmId);
 
     List<Long> getFilmsByDirector(long directorId);
+
+    void replaceDirectorsForFilm(long filmId, List<Director> directors);
 }

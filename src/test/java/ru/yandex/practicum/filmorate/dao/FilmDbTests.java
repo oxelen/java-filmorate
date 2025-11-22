@@ -23,6 +23,28 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class FilmDbTests {
     private final FilmDbStorage filmStorage;
 
+    //Этот тест надо поправить: сделать @AfterEach с удалением всех фильмов из БД
+    /*@Test
+    void testFindAll() {
+        filmStorage.create(Film.builder()
+                .name("A")
+                .description("Film A")
+                .releaseDate(LocalDate.of(2000, 1, 1))
+                .duration(100L)
+                .mpa(MPA.builder().id(1L).name("G").build())
+                .build());
+        filmStorage.create(Film.builder()
+                .name("B")
+                .description("Film B")
+                .releaseDate(LocalDate.of(2001, 1, 1))
+                .duration(120L)
+                .mpa(MPA.builder().id(2L).name("PG").build())
+                .build());
+
+        Collection<Film> films = filmStorage.findAll();
+        assertThat(films.size()).isEqualTo(15);
+    }*/
+
     @Test
     void testCreateFilm() {
         Film film = Film.builder()
@@ -59,27 +81,6 @@ public class FilmDbTests {
 
         assertThat(found).isNotNull();
         assertThat(found.getName()).isEqualTo("test");
-    }
-
-    @Test
-    void testFindAll() {
-        filmStorage.create(Film.builder()
-                .name("A")
-                .description("Film A")
-                .releaseDate(LocalDate.of(2000, 1, 1))
-                .duration(100L)
-                .mpa(MPA.builder().id(1L).name("G").build())
-                .build());
-        filmStorage.create(Film.builder()
-                .name("B")
-                .description("Film B")
-                .releaseDate(LocalDate.of(2001, 1, 1))
-                .duration(120L)
-                .mpa(MPA.builder().id(2L).name("PG").build())
-                .build());
-
-        Collection<Film> films = filmStorage.findAll();
-        assertThat(films.size()).isEqualTo(2);
     }
 
     @Test
