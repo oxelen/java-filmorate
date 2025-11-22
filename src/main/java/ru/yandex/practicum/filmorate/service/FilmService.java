@@ -119,7 +119,13 @@ public class FilmService {
     }
 
     public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
-        return filmStorage.getMostPopularFilms(count, genreId, year);
+        List<Film> mostPopularFilms = filmStorage.getMostPopularFilms(count, genreId, year);
+        if(mostPopularFilms.isEmpty()) {
+            throw new NotFoundException("По вашему запросу ничего не найдено");
+        }
+        log.info("Most popular films have been successfully found for count: {}, genreId: {}, year: {}",
+                count, genreId, year);
+        return mostPopularFilms;
     }
 
     public Collection<Film> getCommonFilms(Long userId, Long friendId) {

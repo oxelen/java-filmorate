@@ -14,8 +14,7 @@ import java.util.List;
 
 @Repository("filmDbStorage")
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
-    private final MPAsRepository mpasRepository;
-    private final JdbcTemplate jdbcTemplate;
+
 
     private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, MPA_id)" +
             "VALUES (?, ?, ?, ?, ?)";
@@ -33,11 +32,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
 
     public FilmDbStorage(JdbcTemplate jdbcTemplate,
-                         FilmRowMapper filmRowMapper,
-                         MPAsRepository mpasRepository) {
+                         FilmRowMapper filmRowMapper) {
         super(jdbcTemplate, filmRowMapper);  // mapper сохранён в родительском классе
-        this.jdbcTemplate = jdbcTemplate;
-        this.mpasRepository = mpasRepository;
     }
 
     @Override
@@ -132,11 +128,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         paramValues.add(count);  // Добавляем count последним (для LIMIT ?)
 
         // Выполняем запрос через JdbcTemplate
-        return jdbcTemplate.query(
-                sql.toString(),
-                paramValues.toArray(),
-                mapper
-        );
+        return findMany(sql.toString(), paramValues.toArray());
     }
 
 
