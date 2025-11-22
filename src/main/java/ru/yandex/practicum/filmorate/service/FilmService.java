@@ -120,7 +120,7 @@ public class FilmService {
 
     public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
         List<Film> mostPopularFilms = filmStorage.getMostPopularFilms(count, genreId, year);
-        if(mostPopularFilms.isEmpty()) {
+        if (mostPopularFilms.isEmpty()) {
             throw new NotFoundException("По вашему запросу ничего не найдено");
         }
         log.info("Most popular films have been successfully found for count: {}, genreId: {}, year: {}",
