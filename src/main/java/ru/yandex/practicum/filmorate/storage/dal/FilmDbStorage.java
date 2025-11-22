@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dal.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -200,6 +201,55 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         Long similarUserId = getMostSimilarUser(userId); // Может выбросить NotFoundException или DatabaseException
         return getRecommendationsForUserBasedOnLikesOfSimilarUser(userId, similarUserId); // Может выбросить DatabaseException
+    }
+
+
+    @Override
+    public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
+        StringBuilder sql = new StringBuilder("""
+                        SELECT
+                        f.id,
+                        f.name,
+                        f.description,
+                        f.release_date,
+                        f.duration,
+                        f.MPA_id,
+                        COUNT(l.user_id) AS likes_count
+                        FROM films f
+                        LEFT JOIN likes l ON f.id = l.film_id
+                        LEFT JOIN film_genres fg ON f.id = fg.film_id
+                        LEFT JOIN genres g ON fg.genre_id = g.id
+                        LEFT JOIN MPAs m ON f.MPA_id = m.id
+                """);
+
+        List<Object> paramValues = new ArrayList<>();
+        List<String> conditions = new ArrayList<>();
+
+        // Добавляем условие по жанру, если задан
+        if (genreId != null) {
+            conditions.add("g.id = ?");
+            paramValues.add(genreId);
+        }
+
+        // Добавляем условие по году, если задан
+        if (year != null) {
+            conditions.add("EXTRACT(YEAR FROM f.release_date) = ?");
+            paramValues.add(year);
+        }
+
+        // Если есть условия — добавляем WHERE
+        if (!conditions.isEmpty()) {
+            sql.append(" WHERE ").append(String.join(" AND ", conditions));
+        }
+
+        // Добавляем группировку, сортировку и LIMIT
+        sql.append(" GROUP BY f.id, f.name, f.description, f.release_date, f.duration, f.MPA_id ")
+                .append("ORDER BY likes_count DESC ")
+                .append("LIMIT ?");
+        paramValues.add(count);  // Добавляем count последним (для LIMIT ?)
+
+        // Выполняем запрос через JdbcTemplate
+        return findMany(sql.toString(), paramValues.toArray());
     }
 
 

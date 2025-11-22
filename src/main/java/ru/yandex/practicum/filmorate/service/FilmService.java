@@ -174,6 +174,17 @@ public class FilmService {
         }
     }
 
+    public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
+        List<Film> mostPopularFilms = filmStorage.getMostPopularFilms(count, genreId, year);
+        if (mostPopularFilms.isEmpty()) {
+            log.info("Popular films list is empty for parameters: count={}, genreId={}, year={}", count, genreId, year);
+        } else {
+            log.info("Most popular films have been successfully found for count: {}, genreId: {}, year: {}",
+                    count, genreId, year);
+        }
+        return mostPopularFilms;
+    }
+
     public Collection<Film> getCommonFilms(Long userId, Long friendId) {
         checkUserInStorage(userId, friendId);
 

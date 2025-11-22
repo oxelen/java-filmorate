@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.controller.PathVariableValidator.checkIds;
 
@@ -66,13 +65,15 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> findMostPopularFilms(@RequestParam Optional<Integer> count) {
+    public List<Film> getPopularFilms(
+            @RequestParam(defaultValue = "10") int count,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Integer year) {
+
         log.info("Running GET method find most Popular films");
+        log.trace("Parameters: count={}, genreId={}, year={}", count, genreId, year);
 
-        final int DEFAULT_COUNT = 10;
-        log.trace("Default most popular films count = {}", DEFAULT_COUNT);
-
-        return filmService.findMostPopularFilms(count.orElse(DEFAULT_COUNT));
+        return filmService.getMostPopularFilms(count, genreId, year);
     }
 
     @GetMapping("/director/{directorId}")

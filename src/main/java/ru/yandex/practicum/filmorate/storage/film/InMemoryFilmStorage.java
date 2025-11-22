@@ -103,6 +103,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
 
+    @Override
+    public List<Film> getMostPopularFilms(int count, Integer genreId, Integer year) {
+        throw new UnsupportedOperationException("Метод находится в разработке");
+    }
+
     private void updateFilmFields(Film oldFilm, Film newFilm) {
         log.debug("Starting update Film fields, id = {}", newFilm.getId());
         if (newFilm.getName() != null) {
