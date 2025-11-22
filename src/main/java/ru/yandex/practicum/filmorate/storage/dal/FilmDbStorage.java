@@ -20,19 +20,14 @@ import java.util.List;
 @Slf4j
 @Repository("filmDbStorage")
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
-    private final MPAsRepository mpasRepository;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private final FilmRowMapper filmRowMapper;
 
     // Конструктор
     public FilmDbStorage(JdbcTemplate jdbcTemplate,
                          FilmRowMapper filmRowMapper,
-                         MPAsRepository mpasRepository,
                          NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         super(jdbcTemplate, filmRowMapper);
-        this.mpasRepository = mpasRepository;
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        this.filmRowMapper = filmRowMapper;
     }
 
     private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, MPA_id)" +
@@ -169,7 +164,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 .addValue("limit", limitForQuery);
 
         try {
-            List<Film> recommendations = namedParameterJdbcTemplate.query(sql, params, filmRowMapper);
+            List<Film> recommendations = namedParameterJdbcTemplate.query(sql, params, mapper);
 
             log.info("Generated {} recommendations for userId={} based on similarUserId={}",
                     recommendations.size(), userId, similarUserId);
