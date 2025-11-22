@@ -18,6 +18,7 @@ public class GenresRepository extends BaseDbStorage<Genre> {
                                                          "WHERE film_id = ?)";
     private static final String FIND_ALL_QUERY = "SELECT * FROM genres";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE id = ?";
+    private static final String DELETE_FILM_GENRES_QUERY = "DELETE FROM film_genres WHERE film_id = ?";
 
     public GenresRepository(JdbcTemplate jdbc,
                             @Qualifier("genresRowMapper") RowMapper<Genre> mapper) {
@@ -35,5 +36,9 @@ public class GenresRepository extends BaseDbStorage<Genre> {
     public Genre findById(int id) {
         return findOne(FIND_BY_ID_QUERY, id).orElseThrow(() ->
                 new NotFoundException("Не удалось найти жанр по айди"));
+    }
+
+    public boolean deleteFilmGenresByFilmId(Long filmId) {
+        return delete(DELETE_FILM_GENRES_QUERY, filmId);
     }
 }

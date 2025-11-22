@@ -3,8 +3,10 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
@@ -73,7 +75,7 @@ public class FilmService {
     }
 
     public Film findById(Long id) {
-        return filmStorage.findById(id);
+        return filmStorage.findById(id).orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
     }
 
     public Map<String, Long> likeFilm(Long filmId, Long userId) {
@@ -88,7 +90,7 @@ public class FilmService {
         }
 
         likes.add(userId);
-        log.trace("User (id = {}) like film (id ={})", userId, filmId);
+
 
         likesRepository.create(filmId, userId);
 
@@ -96,6 +98,7 @@ public class FilmService {
         eventsRepository.createEvent(event);
         log.debug("Event created: {}", event);
 
+        log.info("User (id = {}) liked film (id ={})", userId, filmId);
         return Map.of("film Id", filmId,
                 "userId", userId);
     }
@@ -183,6 +186,18 @@ public class FilmService {
                     count, genreId, year);
         }
         return mostPopularFilms;
+    }
+
+    @Transactional
+    public void deleteFilmById(Long filmId) {
+        log.debug("Starting deleteFilmById, filmId = {}", filmId);
+        Film film = findById(filmId);
+
+        if (!filmStorage.deleteById(film.getId())) {
+            log.error("Failed to remove film with id = {}", filmId);
+            throw new InternalServerException("Не удалось удалить фильм с id = " + filmId);
+        }
+        log.info("Film with id = {} has been successfully deleted", filmId);
     }
 
     public Collection<Film> getCommonFilms(Long userId, Long friendId) {

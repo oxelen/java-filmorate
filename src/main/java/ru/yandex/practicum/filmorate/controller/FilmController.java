@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -89,5 +90,13 @@ public class FilmController {
         checkIds(userId, friendId);
 
         return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @DeleteMapping("{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteById(@PathVariable Long id) {
+        log.info("Running DELETE method: deleteFilmById");
+        checkIds(id);
+        filmService.deleteFilmById(id);
     }
 }

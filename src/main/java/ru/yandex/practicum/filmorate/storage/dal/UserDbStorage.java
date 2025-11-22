@@ -16,6 +16,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM users WHERE id = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -59,5 +60,10 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     @Override
     public boolean containsUser(Long id) {
         return findOne(FIND_BY_ID_QUERY, id).isPresent();
+    }
+
+    @Override
+    public boolean deleteById(Long userId) {
+        return delete(DELETE_BY_ID_QUERY, userId);
     }
 }

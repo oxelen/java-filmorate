@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Event.Event;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -92,6 +93,14 @@ public class UserController {
         return userService.getRecommendations(id);
     }
 
+
+    @DeleteMapping("{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteById(@PathVariable Long userId) {
+        log.info("Running DELETE method: deleteUserById");
+        checkIds(userId);
+        userService.deleteUserById(userId);
+    }
 
     @GetMapping("/{id}/feed")
     public Collection<Event> findEventsByUser(@PathVariable Long id,

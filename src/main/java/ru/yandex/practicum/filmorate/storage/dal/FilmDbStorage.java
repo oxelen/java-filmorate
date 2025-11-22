@@ -16,20 +16,13 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.List;
 
 @Slf4j
 @Repository("filmDbStorage")
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-
-    // Конструктор
-    public FilmDbStorage(JdbcTemplate jdbcTemplate,
-                         FilmRowMapper filmRowMapper,
-                         NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
-        super(jdbcTemplate, filmRowMapper);
-        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-    }
 
     private static final String INSERT_QUERY = "INSERT INTO films (name, description, release_date, duration, MPA_id)" +
                                                "VALUES (?, ?, ?, ?, ?)";
@@ -60,6 +53,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             GROUP BY f.id
             ORDER BY likes_count DESC;
             """;
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
+
+    // Конструктор
+    public FilmDbStorage(JdbcTemplate jdbcTemplate,
+                         FilmRowMapper filmRowMapper,
+                         NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+        super(jdbcTemplate, filmRowMapper);
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+    }
 
     @Override
     public Film create(Film film) {
@@ -95,9 +97,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     @Override
-    public Film findById(Long id) {
+    public Optional<Film> findById(Long id) {
         return findOne(FIND_BY_ID_QUERY, id)
-                .orElseThrow(() -> new NotFoundException("Фильм не найден"));
+                ;
     }
 
     @Override
@@ -265,5 +267,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     public List<Film> getFilmsByDirectorSortedByLikes(Long directorId) {
         return jdbc.query(FIND_FILMS_BY_DIRECTOR_BY_LIKES, mapper, directorId);
+    }
+
+    public boolean deleteById(Long filmId) {
+        return delete(DELETE_BY_ID_QUERY, filmId);
     }
 }
