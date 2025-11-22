@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Event.Event;
 import ru.yandex.practicum.filmorate.model.Event.EventOperation;
 import ru.yandex.practicum.filmorate.model.Event.EventType;
@@ -13,11 +15,16 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.util.ServiceUtils;
 import ru.yandex.practicum.filmorate.storage.dal.EventsRepository;
 import ru.yandex.practicum.filmorate.storage.dal.LikesRepository;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.director.FilmDirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmValidator;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,27 +33,39 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final LikesRepository likesRepository;
+    private final DirectorStorage directorStorage;
+    private final FilmDirectorStorage filmDirectorStorage;
     private final EventsRepository eventsRepository;
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
-                       LikesRepository likesRepository, EventsRepository eventsRepository) {
+                       LikesRepository likesRepository, DirectorStorage directorStorage, FilmDirectorStorage filmDirectorStorage, EventsRepository eventsRepository) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.likesRepository = likesRepository;
+        this.directorStorage = directorStorage;
+        this.filmDirectorStorage = filmDirectorStorage;
         this.eventsRepository = eventsRepository;
     }
 
     public Film create(Film film) {
         FilmValidator.validateFilm(film);
 
-        return filmStorage.create(film);
+        film = filmStorage.create(film);
+        validateDirectorsExist(film);
+        filmDirectorStorage.addDirectorsToFilm(film.getId(), film.getDirectors());
+
+        return film;
     }
 
     public Film update(Film newFilm) {
         FilmValidator.validateFilm(newFilm);
 
-        return filmStorage.update(newFilm);
+        newFilm = filmStorage.update(newFilm);
+        validateDirectorsExist(newFilm);
+        filmDirectorStorage.replaceDirectorsForFilm(newFilm.getId(), newFilm.getDirectors());
+
+        return newFilm;
     }
 
     public Collection<Film> findAll() {
@@ -90,7 +109,7 @@ public class FilmService {
         if (!likes.contains(userId)) {
             log.warn("Likes of film (id = {}) does not contains like from user (id = {})", filmId, userId);
             throw new ConditionsNotMetException("В списке лайков фильма с id = " + filmId
-                    + " нет пользователя с id = " + userId);
+                                                + " нет пользователя с id = " + userId);
         }
 
         likes.remove(userId);
@@ -113,6 +132,42 @@ public class FilmService {
                 .sorted((o1, o2) -> (o2.getLikes().size() - o1.getLikes().size()))
                 .limit(count)
                 .collect(Collectors.toList());
+    }
+
+    public List<Film> getFilmsByDirector(long directorId, String sortBy) {
+        if (directorStorage.findById(directorId).isEmpty()) {
+            throw new NotFoundException("Режиссёр с id = " + directorId + " не найден");
+        }
+
+        switch (sortBy) {
+            case "year":
+                return filmStorage.getFilmsByDirectorSortedByYear(directorId);
+            case "likes":
+                return filmStorage.getFilmsByDirectorSortedByLikes(directorId);
+            default:
+                throw new ValidationException("sortBy должен быть 'year' или 'likes'");
+        }
+    }
+
+    private void validateDirectorsExist(Film film) {
+        List<Director> directors = film.getDirectors();
+        if (directors == null || directors.isEmpty()) {
+            return;
+        }
+
+        List<Long> ids = directors.stream()
+                .map(Director::getId)
+                .toList();
+
+        List<Long> existing = directorStorage.findAllExistingIds(ids);
+
+        if (existing.size() != ids.size()) {
+            List<Long> missing = ids.stream()
+                    .filter(id -> !existing.contains(id))
+                    .toList();
+
+            throw new NotFoundException("Режиссёры не найдены: " + missing);
+        }
     }
 
     public Collection<Film> getCommonFilms(Long userId, Long friendId) {

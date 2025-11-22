@@ -25,14 +25,12 @@ public class FilmController {
     @PostMapping
     public Film create(@RequestBody Film film) {
         log.info("Running POST method: create film");
-
         return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@RequestBody Film newFilm) {
         log.info("Running PUT method: update film");
-
         return filmService.update(newFilm);
     }
 
@@ -77,9 +75,15 @@ public class FilmController {
         return filmService.findMostPopularFilms(count.orElse(DEFAULT_COUNT));
     }
 
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(@PathVariable Long directorId, @RequestParam String sortBy) {
+        log.info("Running GET METHOD getFilmsByDirector");
+        checkIds(directorId);
+        return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
     @GetMapping("/common")
-    public Collection<Film> findCommonFilms(@RequestParam Long userId,
-                                            @RequestParam Long friendId) {
+    public Collection<Film> findCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
         log.info("Running GET METHOD find common films");
         checkIds(userId, friendId);
 
