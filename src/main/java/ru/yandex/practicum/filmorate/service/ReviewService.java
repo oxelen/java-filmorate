@@ -61,16 +61,20 @@ public class ReviewService {
         }
         validateReview(newReview);
 
-        checkReviewId(newReview.getReviewId());
-        checkUserAndFilmId(newReview.getUserId(), newReview.getFilmId());
+        Review oldReview = findById(newReview.getReviewId());
+
+        newReview.setUserId(oldReview.getUserId());
+        newReview.setFilmId(oldReview.getFilmId());
+        newReview.setUseful(oldReview.getUseful());
 
         Review updatedReview = reviewsStorage.update(newReview);
+        Review result = findById(updatedReview.getReviewId());
 
-        Event event = ServiceUtils.createEvent(updatedReview.getUserId(), EventType.REVIEW, EventOperation.UPDATE, updatedReview.getReviewId());
+        Event event = ServiceUtils.createEvent(result.getUserId(), EventType.REVIEW, EventOperation.UPDATE, result.getReviewId());
         eventsRepository.createEvent(event);
         log.debug("Event created: {}", event);
 
-        return updatedReview;
+        return result;
     }
 
     public boolean delete(Long id) {
@@ -136,8 +140,7 @@ public class ReviewService {
             res.setUseful(res.getUseful() + 1);
         }
 
-        res.setUseful(res.getUseful() + 1);
-        update(res);
+        updateUseful(res.getReviewId(), +1);
         reviewsStorage.putLike(id, userId);
 
         return res;
@@ -163,8 +166,7 @@ public class ReviewService {
             res.setUseful(res.getUseful() - 1);
         }
 
-        res.setUseful(res.getUseful() - 1);
-        update(res);
+        updateUseful(res.getReviewId(), -1);
         reviewsStorage.putDislike(id, userId);
 
         return res;
@@ -183,8 +185,7 @@ public class ReviewService {
                     + " не ставил лайк отзыву с id = " + id);
         }
 
-        res.setUseful(res.getUseful() - 1);
-        update(res);
+        updateUseful(res.getReviewId(), -1);
 
         return reviewsStorage.deleteLike(id, userId);
     }
@@ -202,10 +203,15 @@ public class ReviewService {
                     + " не ставил дизлайк отзыву с id = " + id);
         }
 
-        res.setUseful(res.getUseful() + 1);
-        update(res);
+        updateUseful(res.getReviewId(), +1);
 
         return reviewsStorage.deleteDislike(id, userId);
+    }
+
+    private void updateUseful(long reviewId, int delta) {
+        Review review = findById(reviewId);
+        review.setUseful(review.getUseful() + delta);
+        reviewsStorage.update(review);
     }
 
     private void checkUserAndFilmId(Long userId, Long filmId) {

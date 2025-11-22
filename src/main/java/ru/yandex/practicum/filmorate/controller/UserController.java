@@ -104,7 +104,7 @@ public class UserController {
 
     @GetMapping("/{id}/feed")
     public Collection<Event> findEventsByUser(@PathVariable Long id,
-                                              @RequestParam(defaultValue = "10") int count) {
+                                              @RequestParam(defaultValue = "20") int count) {
         checkIds(id);
         return userService.getUserFeed(id, count);
     }

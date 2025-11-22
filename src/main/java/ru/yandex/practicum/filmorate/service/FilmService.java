@@ -80,7 +80,11 @@ public class FilmService {
         Set<Long> likes = findById(filmId).getLikes();
         if (likes.contains(userId)) {
             log.warn("User (id = {}) already likes film (id = {})", userId, filmId);
-            throw new DuplicatedDataException("Пользователь с id = " + userId + " уже лайкнул фильм с id = " + filmId);
+            Event event = ServiceUtils.createEvent(userId, EventType.LIKE, EventOperation.ADD, filmId);
+            eventsRepository.createEvent(event);
+            log.debug("Event created: {}", event);
+            return Map.of("film Id", filmId,
+                    "userId", userId);
         }
 
         likes.add(userId);

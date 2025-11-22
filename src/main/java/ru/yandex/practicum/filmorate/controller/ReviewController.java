@@ -46,7 +46,7 @@ public class ReviewController {
     }
 
     @GetMapping
-    public Collection<Review> findAll(@RequestParam Long filmId,
+    public Collection<Review> findAll(@RequestParam (required = false) Long filmId,
                                       @RequestParam(defaultValue = "10") Integer count) {
         log.info("Starting GET METHOD find all reviews");
 

@@ -8,7 +8,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.DatabaseException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dal.mapper.FilmRowMapper;
@@ -201,8 +200,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     m.name AS mpa_name
                 FROM films f
                 JOIN MPAs m ON f.MPA_id = m.id
-                WHERE f.id IN (SELECT film_id FROM similar_user_liked)
-                  AND f.id NOT IN (SELECT film_id FROM user_already_liked)
+                WHERE f.id IN (
+                    SELECT film_id FROM likes WHERE user_id = :similarUserId
+                )
+                AND f.id NOT IN (
+                    SELECT film_id FROM likes WHERE user_id = :userId
+                )
                 ORDER BY f.release_date DESC
                 LIMIT :limit
                 """;
@@ -231,7 +234,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     public List<Film> getRecommendationFilms(Long userId) {
         log.debug("Starting recommendation process for userId={}", userId);
 
-        Long similarUserId = getMostSimilarUser(userId); // Может выбросить NotFoundException или DatabaseException
+        Long similarUserId = getMostSimilarUser(userId);
+        if(similarUserId == null) {
+            log.warn("No similar user found for userId={}, returning empty List", userId);
+            return List.of();
+        }
         return getRecommendationsForUserBasedOnLikesOfSimilarUser(userId, similarUserId); // Может выбросить DatabaseException
     }
 
