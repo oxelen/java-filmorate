@@ -85,7 +85,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             GROUP BY f.id
             ORDER BY likes_count DESC
             """;
-    // Конструктор
+
+
     public FilmDbStorage(JdbcTemplate jdbcTemplate,
                          FilmRowMapper filmRowMapper,
                          NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
@@ -235,7 +236,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         log.debug("Starting recommendation process for userId={}", userId);
 
         Long similarUserId = getMostSimilarUser(userId);
-        if(similarUserId == null) {
+        if (similarUserId == null) {
             log.warn("No similar user found for userId={}, returning empty List", userId);
             return List.of();
         }
@@ -264,30 +265,30 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         List<Object> paramValues = new ArrayList<>();
         List<String> conditions = new ArrayList<>();
 
-        // Добавляем условие по жанру, если задан
+
         if (genreId != null) {
             conditions.add("g.id = ?");
             paramValues.add(genreId);
         }
 
-        // Добавляем условие по году, если задан
+
         if (year != null) {
             conditions.add("EXTRACT(YEAR FROM f.release_date) = ?");
             paramValues.add(year);
         }
 
-        // Если есть условия — добавляем WHERE
+
         if (!conditions.isEmpty()) {
             sql.append(" WHERE ").append(String.join(" AND ", conditions));
         }
 
-        // Добавляем группировку, сортировку и LIMIT
+
         sql.append(" GROUP BY f.id, f.name, f.description, f.release_date, f.duration, f.MPA_id ")
                 .append("ORDER BY likes_count DESC ")
                 .append("LIMIT ?");
-        paramValues.add(count);  // Добавляем count последним (для LIMIT ?)
+        paramValues.add(count);
 
-        // Выполняем запрос через JdbcTemplate
+
         return findMany(sql.toString(), paramValues.toArray());
     }
 
