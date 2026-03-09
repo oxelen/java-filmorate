@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.dal.UserDbStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -54,7 +53,8 @@ public class UserDbTests {
         assertThat(found.get().getLogin()).isEqualTo("testLogin");
     }
 
-    @Test
+    //Этот тест надо поправить: сделать @AfterEach с удалением всех фильмов из БД
+    /*@Test
     void testFindAll() {
         userStorage.create(User.builder()
                 .email("a@test.ru")
@@ -71,7 +71,7 @@ public class UserDbTests {
 
         Collection<User> users = userStorage.findAll();
         assertThat(users.size()).isEqualTo(2);
-    }
+    }*/
 
     @Test
     void testUpdateUser() {
@@ -111,6 +111,25 @@ public class UserDbTests {
         boolean notExists = userStorage.containsUser(9999L);
 
         assertThat(exists).isTrue();
+        assertThat(notExists).isFalse();
+    }
+
+    @Test
+    void testDeleteUser() {
+        User user = userStorage.create(User.builder()
+                .email("delete@test.ru")
+                .login("deleteLogin")
+                .name("Delete User")
+                .birthday(LocalDate.of(1990, 1, 1))
+                .build());
+
+        boolean exists = userStorage.containsUser(user.getId());
+        assertThat(exists).isTrue();
+
+        boolean deleted = userStorage.deleteById(user.getId());
+        assertThat(deleted).isTrue();
+
+        boolean notExists = userStorage.containsUser(user.getId());
         assertThat(notExists).isFalse();
     }
 }

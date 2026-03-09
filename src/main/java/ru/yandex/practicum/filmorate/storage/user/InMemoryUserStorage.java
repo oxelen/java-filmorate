@@ -81,6 +81,11 @@ public class InMemoryUserStorage implements UserStorage {
         return false;
     }
 
+    @Override
+    public boolean deleteById(Long id) {
+        return users.remove(id) != null;
+    }
+
     private void updateUserFields(User oldUser, User newUser) {
         log.trace("Starting update User fields, id = {}", newUser.getId());
         if (newUser.getEmail() != null && !oldUser.getEmail().equals(newUser.getEmail())) {
